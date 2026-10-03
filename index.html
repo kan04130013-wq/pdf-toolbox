@@ -172,6 +172,44 @@ textarea.out{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-s
 .spin{width:18px;height:18px;border:2.5px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;flex:none}
 @keyframes sp{to{transform:rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation-duration:2s!important}}
+/* page pickers */
+.card.pk{cursor:pointer}
+.card .chk{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:2px solid var(--line);background:var(--surface);display:grid;place-items:center;font-size:.8rem;font-weight:900;color:transparent}
+.card.on{border-color:var(--accent)}
+.card.on .chk{background:var(--accent);border-color:var(--accent);color:#fff}
+.card.danger.on{border-color:var(--danger)}
+.card.danger.on .chk{background:var(--danger);border-color:var(--danger)}
+.card.danger.on .th img{opacity:.3}
+#bin-scan{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+/* viewers & editors */
+.stage .layer{position:absolute;inset:0}
+.stage.drawing .layer{cursor:crosshair}
+.editor-grid{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:18px;margin-top:18px;align-items:start}
+@media (max-width:860px){.editor-grid{grid-template-columns:1fr}}
+.props{background:var(--sunk);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.props textarea{min-height:80px}
+.toolrow{display:flex;flex-wrap:wrap;gap:6px}
+.toolrow .btn[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.swatches{display:flex;gap:8px;flex-wrap:wrap}
+.swatches button{width:30px;height:30px;border-radius:50%;border:2px solid var(--line);cursor:pointer}
+.swatches button[aria-pressed="true"]{outline:3px solid var(--accent);outline-offset:2px}
+.eo{position:absolute;box-sizing:border-box;touch-action:none;cursor:move}
+.eo.sel{outline:2px dashed var(--accent);outline-offset:2px}
+.eo.t{white-space:pre;line-height:1.35;font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;text-align:left}
+.eo img,.eo svg{display:block;width:100%;height:100%;pointer-events:none;overflow:visible}
+.eo .hd{position:absolute;right:-9px;bottom:-9px;width:18px;height:18px;background:var(--accent);border:2px solid #fff;border-radius:50%;cursor:nwse-resize;touch-action:none}
+.eo .x,.rb .x{position:absolute;right:-11px;top:-11px;width:24px;height:24px;border-radius:50%;background:#c0392b;color:#fff;border:2px solid #fff;font-size:14px;line-height:18px;text-align:center;cursor:pointer;padding:0}
+.rb{position:absolute;background:rgba(0,0,0,.78);outline:1px solid #000}
+.fw{position:absolute;box-sizing:border-box;line-height:normal;background:rgba(227,233,255,.55);border:1.5px solid rgba(36,73,216,.6);display:flex;align-items:center;justify-content:center}
+.fw input[type=text],.fw textarea,.fw select{width:100%;height:100%;border:0;background:transparent;padding:0 3px;color:#111;resize:none;min-height:0;font-family:inherit}
+.fw input[type=checkbox],.fw input[type=radio]{width:80%;height:80%;margin:0;accent-color:#2449D8}
+#form-view .stage{touch-action:auto}
+/* scan editor */
+.qwrap{position:relative;display:inline-block;line-height:0;max-width:100%;touch-action:none}
+.qwrap canvas{width:100%;max-height:none;display:block}
+.qwrap svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.qh{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(36,73,216,.2);border:3px solid #2449D8;touch-action:none;cursor:grab}
+#scan-out{max-width:100%;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.2);background:#fff}
 footer{margin-top:26px;color:var(--muted);font-size:.82rem;text-align:center}
 </style>
 </head>
@@ -184,7 +222,7 @@ footer{margin-top:26px;color:var(--muted);font-size:.82rem;text-align:center}
     <header class="top">
       <div>
         <h1>PDF 工具箱</h1>
-        <p>檔案都在你的瀏覽器裡處理，不會上傳到伺服器（AI 工具除外）。</p>
+        <p id="subtitle">檔案都在你的瀏覽器裡處理，不會上傳到伺服器。</p>
       </div>
       <input class="search" id="search" type="search" placeholder="搜尋工具，例如：壓縮" aria-label="搜尋工具">
     </header>
@@ -410,6 +448,199 @@ footer{margin-top:26px;color:var(--muted);font-size:.82rem;text-align:center}
         <button class="btn primary go" data-go="sign" disabled>簽署並儲存</button>
       </div>
 
+      <!-- remove -->
+      <div data-view="remove">
+        <div class="drop" data-drop="remove"></div>
+        <div class="fileline" data-file="remove" hidden></div>
+        <div class="bar" data-needs="remove"><input type="text" class="rangebox" id="remove-range" placeholder="快速選取，例如 2, 5-7" aria-label="快速選取頁碼" style="border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;min-height:38px;background:var(--surface);width:210px"><button class="btn sm" type="button" data-range-apply="remove">選取</button><button class="btn sm" type="button" data-sel-all="remove">全選</button><button class="btn sm" type="button" data-sel-none="remove">清除</button><span class="hint" data-count="remove"></span></div>
+        <p class="hint" data-needs="remove" style="margin:8px 0 0">點縮圖選擇要刪除的頁面，被選到的頁面會標成紅色。</p>
+        <ul class="bin" id="pk-remove"></ul>
+        <button class="btn primary go" data-go="remove" disabled>刪除選取的頁面</button>
+      </div>
+
+      <!-- extract -->
+      <div data-view="extract">
+        <div class="drop" data-drop="extract"></div>
+        <div class="fileline" data-file="extract" hidden></div>
+        <div class="bar" data-needs="extract"><input type="text" class="rangebox" id="extract-range" placeholder="快速選取，例如 2, 5-7" aria-label="快速選取頁碼" style="border:1.5px solid var(--line);border-radius:8px;padding:7px 10px;min-height:38px;background:var(--surface);width:210px"><button class="btn sm" type="button" data-range-apply="extract">選取</button><button class="btn sm" type="button" data-sel-all="extract">全選</button><button class="btn sm" type="button" data-sel-none="extract">清除</button><span class="hint" data-count="extract"></span></div>
+        <p class="hint" data-needs="extract" style="margin:8px 0 0">點縮圖選擇要保留的頁面。</p>
+        <ul class="bin" id="pk-extract"></ul>
+        <div class="opts" data-needs="extract">
+          <div class="f">輸出方式
+            <div class="seg">
+              <label><input type="radio" name="ext-mode" value="one" checked><span>合併成一個 PDF</span></label>
+              <label><input type="radio" name="ext-mode" value="each"><span>每頁各存一個 PDF</span></label>
+            </div>
+          </div>
+        </div>
+        <button class="btn primary go" data-go="extract" disabled>提取選取的頁面</button>
+      </div>
+
+      <!-- rotate -->
+      <div data-view="rotate">
+        <div class="drop" data-drop="rotate"></div>
+        <div class="fileline" data-file="rotate" hidden></div>
+        <div class="bar" data-needs="rotate">
+          <button class="btn sm" type="button" id="rot-all-ccw">全部逆時針 90°</button>
+          <button class="btn sm" type="button" id="rot-all-cw">全部順時針 90°</button>
+          <button class="btn sm" type="button" id="rot-reset">還原</button>
+          <span class="hint">點縮圖可順時針旋轉那一頁。</span>
+        </div>
+        <ul class="bin" id="pk-rotate"></ul>
+        <button class="btn primary go" data-go="rotate" disabled>儲存旋轉後的 PDF</button>
+      </div>
+
+      <!-- scan -->
+      <div data-view="scan">
+        <div class="drop" data-drop="scan"></div>
+        <ul class="bin" id="bin-scan"></ul>
+        <p class="hint" style="margin:10px 0 0">點照片或鉛筆按鈕，可以拉正文件邊緣、換濾鏡。</p>
+        <div id="scan-editor" hidden>
+          <div class="two">
+            <div class="preview" style="display:block;text-align:center">
+              <div class="qwrap" id="scan-q"><canvas id="scan-src"></canvas><svg viewBox="0 0 1 1" preserveAspectRatio="none"><polygon id="scan-poly" fill="rgba(36,73,216,.14)" stroke="#2449D8" stroke-width="2" vector-effect="non-scaling-stroke"/></svg></div>
+              <div class="cap">拖曳四個藍色圓點，對齊文件的四個角</div>
+            </div>
+            <div class="opts">
+              <div class="f">濾鏡
+                <div class="seg">
+                  <label><input type="radio" name="scan-filter" value="enhance"><span>自動增強</span></label>
+                  <label><input type="radio" name="scan-filter" value="bw"><span>黑白文件</span></label>
+                  <label><input type="radio" name="scan-filter" value="gray"><span>灰階</span></label>
+                  <label><input type="radio" name="scan-filter" value="color"><span>原色</span></label>
+                </div>
+              </div>
+              <div class="f">預覽<canvas id="scan-out"></canvas></div>
+              <div class="bar" style="margin-top:0">
+                <button class="btn primary sm" type="button" id="scan-apply">套用</button>
+                <button class="btn sm" type="button" id="scan-reset">不裁切</button>
+                <button class="btn sm" type="button" id="scan-cancel">取消</button>
+              </div>
+              <button class="btn sm" type="button" id="scan-filter-all">把這個濾鏡套用到全部照片</button>
+            </div>
+          </div>
+        </div>
+        <div class="opts">
+          <label class="f">頁面大小<select id="scan-size"><option value="a4">A4</option><option value="letter">Letter</option><option value="fit">和照片一樣大</option></select></label>
+          <label class="f">畫質與檔案大小<select id="scan-quality"><option value="high">高畫質</option><option value="mid" selected>標準</option><option value="low">小檔案（適合寄信）</option></select></label>
+        </div>
+        <button class="btn primary go" data-go="scan" disabled>產生 PDF</button>
+      </div>
+
+      <!-- ocr -->
+      <div data-view="ocr">
+        <div class="drop" data-drop="ocr"></div>
+        <div class="fileline" data-file="ocr" hidden></div>
+        <div class="opts" data-needs="ocr">
+          <label class="f">文件語言<select id="ocr-lang" class="ocr-lang"></select></label>
+          <div class="f">輸出
+            <div class="seg">
+              <label><input type="radio" name="ocr-out" value="pdf" checked><span>可搜尋的 PDF</span></label>
+              <label><input type="radio" name="ocr-out" value="txt"><span>純文字</span></label>
+            </div>
+          </div>
+          <label class="f">頁碼<input type="text" id="ocr-range" placeholder="留空代表全部"></label>
+          <label class="f check"><input type="checkbox" id="ocr-skip" checked> 略過已經有文字的頁面</label>
+        </div>
+        <p class="hint" style="margin:10px 0 0">第一次使用會下載辨識引擎和約 2 MB 的語言資料，之後會快很多。每頁約需 5 到 20 秒，請不要關閉頁面。</p>
+        <div class="info" id="ocr-status" hidden></div>
+        <button class="btn primary go" data-go="ocr" disabled>開始辨識</button>
+        <div id="ocr-result" hidden>
+          <textarea class="out" id="ocr-out" spellcheck="false" aria-label="辨識結果"></textarea>
+          <div class="bar"><button class="btn primary" type="button" id="ocr-save">下載 .txt 檔</button><button class="btn" type="button" id="ocr-copy">複製</button></div>
+        </div>
+      </div>
+
+      <!-- pdf2word -->
+      <div data-view="pdf2word">
+        <div class="drop" data-drop="pdf2word"></div>
+        <div class="fileline" data-file="pdf2word" hidden></div>
+        <div class="opts" data-needs="pdf2word">
+          <div class="f">轉換方式
+            <div class="seg">
+              <label><input type="radio" name="w-mode" value="text" checked><span>可編輯文字</span></label>
+              <label><input type="radio" name="w-mode" value="layout"><span>保留原版面（頁面圖片）</span></label>
+            </div>
+            <span class="hint">「可編輯文字」會保留標題、段落和清單，但原本的排版、表格和圖片位置不會保留。「保留原版面」看起來和 PDF 一模一樣，但文字不能修改。</span>
+          </div>
+          <label class="f check" id="w-ocr-f"><input type="checkbox" id="w-ocr" checked> 沒有文字的頁面（掃描檔）自動用 OCR 辨識</label>
+          <label class="f" id="w-lang-f">OCR 語言<select id="w-lang" class="ocr-lang"></select></label>
+        </div>
+        <div class="info" id="w-status" hidden></div>
+        <button class="btn primary go" data-go="pdf2word" disabled>轉換成 Word</button>
+      </div>
+
+      <!-- pdf2ppt -->
+      <div data-view="pdf2ppt">
+        <div class="drop" data-drop="pdf2ppt"></div>
+        <div class="fileline" data-file="pdf2ppt" hidden></div>
+        <div class="opts" data-needs="pdf2ppt">
+          <label class="f">畫質<select id="ppt-q"><option value="2">標準</option><option value="3">高畫質（檔案較大）</option></select></label>
+          <label class="f check"><input type="checkbox" id="ppt-notes" checked> 把每頁的文字放進簡報的「備忘稿」</label>
+        </div>
+        <p class="hint" style="margin:10px 0 0">每一頁會變成一張和原本一模一樣的投影片，但內容是圖片，不能直接改字。</p>
+        <button class="btn primary go" data-go="pdf2ppt" disabled>轉換成 PowerPoint</button>
+      </div>
+
+      <!-- edit -->
+      <div data-view="edit">
+        <div class="drop" data-drop="edit"></div>
+        <div class="fileline" data-file="edit" hidden></div>
+        <div data-needs="edit">
+          <div class="toolrow" id="ed-tools" role="toolbar" aria-label="編輯工具" style="margin-top:16px">
+            <button class="btn sm" type="button" data-mode="select" aria-pressed="true">選取／移動</button>
+            <button class="btn sm" type="button" data-mode="text" aria-pressed="false">文字</button>
+            <button class="btn sm" type="button" data-mode="image" aria-pressed="false">圖片</button>
+            <button class="btn sm" type="button" data-mode="rect" aria-pressed="false">方框</button>
+            <button class="btn sm" type="button" data-mode="hl" aria-pressed="false">螢光筆</button>
+            <button class="btn sm" type="button" data-mode="pen" aria-pressed="false">畫筆</button>
+            <button class="btn sm" type="button" data-mode="white" aria-pressed="false">白色遮蓋</button>
+          </div>
+          <input type="file" class="vh" accept="image/*" id="ed-img">
+          <div class="editor-grid">
+            <div class="preview" style="display:block;text-align:center"><div id="ed-view"></div></div>
+            <aside class="props" id="ed-props"></aside>
+          </div>
+        </div>
+        <button class="btn primary go" data-go="edit" disabled>儲存 PDF</button>
+      </div>
+
+      <!-- form -->
+      <div data-view="form">
+        <div class="drop" data-drop="form"></div>
+        <div class="fileline" data-file="form" hidden></div>
+        <div class="info" id="form-info" hidden></div>
+        <div class="editor-grid" data-needs="form" id="form-grid">
+          <div class="preview" style="display:block;text-align:center"><div id="form-view"></div></div>
+          <aside class="props">
+            <p class="hint" id="form-count" style="margin:0"></p>
+            <p class="hint" style="margin:0">直接在頁面上藍色的欄位裡填寫，可以用上方箭頭切換頁面。</p>
+            <label class="f check"><input type="checkbox" id="form-flat"> 儲存後鎖定內容（不能再修改）</label>
+            <button class="btn sm" type="button" id="form-clear">清除所有填寫內容</button>
+          </aside>
+        </div>
+        <button class="btn primary go" data-go="form" disabled>儲存填好的 PDF</button>
+      </div>
+
+      <!-- redact -->
+      <div data-view="redact">
+        <div class="drop" data-drop="redact"></div>
+        <div class="fileline" data-file="redact" hidden></div>
+        <div class="editor-grid" data-needs="redact">
+          <div class="preview" style="display:block;text-align:center"><div id="rd-view"></div></div>
+          <aside class="props">
+            <p class="hint" style="margin:0">在頁面上拖曳，框出要塗黑的區域。點方框右上角的 × 可以移除。</p>
+            <label class="f">搜尋文字並自動標記<input type="text" id="rd-q" placeholder="例如 姓名、電話號碼"></label>
+            <button class="btn sm" type="button" id="rd-search">搜尋並標記全部頁面</button>
+            <p class="hint" id="rd-count" style="margin:0">尚未標記</p>
+            <label class="f check"><input type="checkbox" id="rd-meta" checked> 同時清除文件資訊（作者、標題等）</label>
+            <button class="btn sm" type="button" id="rd-clear">清除所有標記</button>
+          </aside>
+        </div>
+        <p class="hint" style="margin:10px 0 0">有標記的頁面會轉成圖片，確保被塗黑的文字真正從檔案裡刪除；沒有標記的頁面保持不變。</p>
+        <button class="btn primary go" data-go="redact" disabled>套用並儲存</button>
+      </div>
+
       <!-- summary -->
       <div data-view="summary">
         <div class="info warn" data-noai hidden>AI 功能需要在 Claude 裡開啟這個頁面才能使用。</div>
@@ -592,19 +823,40 @@ const IC = {
   sign:'<path d="M3 19c3-1 4-6 6-10s4-5 5-3-3 8-1 10 4-4 5-4 1 3 3 3"/><path d="M3 22h18"/>',
   summary:'<path d="M5 5h14M5 10h14M5 15h9"/><path d="M18 14l1 2.2 2.2 1-2.2 1-1 2.3-1-2.3-2.2-1 2.2-1z"/>',
   translate:'<path d="M4 5h9M8.5 3v2M6 5c1 3.5 3.5 6 6 7M11 5c-1 3.5-3.5 6-6 7"/><path d="M13 21l4-10 4 10M14.5 17.5h5"/>'
+,
+  remove:'<path d="M6 3h9l4 4v14H6z"/><path d="M9.5 11.5l5 5M14.5 11.5l-5 5"/>',
+  extract:'<path d="M14 3H6v18h12v-7"/><path d="M12 12l9-9M15 3h6v6"/>',
+  rotate:'<path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/>',
+  scan:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M3 12h18"/>',
+  ocr:'<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M12 9v7"/>',
+  pdf2word:'<path d="M6 3h9l4 4v14H6z"/><path d="M8.5 11l1.5 6 2-4.5 2 4.5 1.5-6"/>',
+  pdf2ppt:'<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8M10 13V8h2.5a1.75 1.75 0 0 1 0 3.5H10"/>',
+  edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  form:'<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h8M8 12h4"/><rect x="8" y="15" width="8" height="3" rx=".5"/>',
+  redact:'<path d="M6 3h9l4 4v14H6z"/><path d="M8.5 10h7v3h-7z" fill="currentColor"/><path d="M8.5 16.5h5"/>'
 };
 const TOOLS = [
   { id:'merge', cat:'整理 PDF', name:'合併 PDF', desc:'把多個 PDF 和照片依順序合成一份檔案', color:'#E4563C' },
   { id:'split', cat:'整理 PDF', name:'拆分 PDF', desc:'每頁拆成一個檔案，或依頁碼範圍分成幾份', color:'#E4563C' },
-  { id:'organize', cat:'整理 PDF', name:'整理頁面', desc:'看著縮圖排序、旋轉或刪除頁面', color:'#E4563C', kw:'旋轉 排序 刪除 擷取' },
+  { id:'remove', cat:'整理 PDF', name:'移除頁面', desc:'點選縮圖，刪掉不需要的頁面', color:'#E4563C', kw:'刪除' },
+  { id:'extract', cat:'整理 PDF', name:'提取頁面', desc:'挑出需要的頁面，另存成新檔', color:'#E4563C', kw:'擷取 取出' },
+  { id:'rotate', cat:'整理 PDF', name:'旋轉 PDF', desc:'把方向不對的頁面轉正', color:'#E4563C', kw:'轉向 橫向' },
+  { id:'organize', cat:'整理 PDF', name:'整理頁面', desc:'看著縮圖排序、旋轉或刪除頁面', color:'#E4563C', kw:'排序' },
+  { id:'scan', cat:'整理 PDF', name:'掃描為 PDF', desc:'用手機拍文件，拉正邊緣、變成像掃描的一樣', color:'#E4563C', kw:'相機 拍照 照片 掃描器' },
   { id:'compress', cat:'最佳化', name:'壓縮 PDF', desc:'縮小檔案大小，方便寄信和上傳', color:'#3A9A4B', kw:'縮小' },
-  { id:'img2pdf', cat:'轉換', name:'照片轉 PDF', desc:'上傳或拍攝照片，合成一份 PDF', color:'#E9A800', kw:'jpg png 圖片 掃描 相機' },
+  { id:'ocr', cat:'最佳化', name:'OCR 文字辨識', desc:'辨識掃描檔裡的文字，讓 PDF 可以搜尋和複製', color:'#3A9A4B', kw:'ocr 辨識 掃描 搜尋' },
+  { id:'img2pdf', cat:'轉換', name:'照片轉 PDF', desc:'上傳或拍攝照片，合成一份 PDF', color:'#E9A800', kw:'jpg png 圖片 相機' },
   { id:'pdf2img', cat:'轉換', name:'PDF 轉 JPG', desc:'把每一頁存成 JPG 或 PNG 圖片', color:'#E9A800', kw:'圖片 png' },
+  { id:'pdf2word', cat:'轉換', name:'PDF 轉 Word', desc:'轉成可以編輯的 Word 文件', color:'#2B6CD8', kw:'docx word 文書' },
+  { id:'pdf2ppt', cat:'轉換', name:'PDF 轉 PowerPoint', desc:'每一頁變成一張投影片', color:'#D2502E', kw:'pptx ppt 簡報 投影片' },
   { id:'pdf2md', cat:'轉換', name:'PDF 轉 Markdown', desc:'擷取文字，並保留標題與段落結構', color:'#4F63D9', kw:'文字 txt' },
+  { id:'edit', cat:'編輯', name:'編輯 PDF', desc:'加入文字、圖片、方框、螢光筆和手寫', color:'#A6478A', kw:'註解 打字 標示' },
+  { id:'form', cat:'編輯', name:'PDF 表單', desc:'直接在 PDF 表單的欄位裡填寫資料', color:'#A6478A', kw:'填寫 申請表' },
   { id:'pagenum', cat:'編輯', name:'添加頁碼', desc:'選好位置和格式，自動幫每頁編號', color:'#A6478A' },
   { id:'watermark', cat:'編輯', name:'添加浮水印', desc:'加上文字或圖片浮水印，可調透明度與角度', color:'#A6478A', kw:'logo 印章' },
   { id:'crop', cat:'編輯', name:'裁剪 PDF', desc:'裁掉頁面四周多餘的白邊', color:'#A6478A' },
-  { id:'sign', cat:'編輯', name:'簽署 PDF', desc:'手寫或上傳簽名，拖到要簽的位置', color:'#2F6FD6', kw:'簽名' },
+  { id:'sign', cat:'PDF 安全', name:'簽署 PDF', desc:'手寫或上傳簽名，拖到要簽的位置', color:'#2F6FD6', kw:'簽名' },
+  { id:'redact', cat:'PDF 安全', name:'標記密文', desc:'永久塗黑個資與機密內容', color:'#2F6FD6', kw:'遮蔽 個資 塗黑 隱私 密文' },
   { id:'summary', cat:'AI 工具', name:'AI 摘要', desc:'讀完整份文件，整理出重點', color:'#7650E6', ai:true, kw:'重點' },
   { id:'translate', cat:'AI 工具', name:'PDF 翻譯', desc:'把文件翻成你選的語言', color:'#7650E6', ai:true, kw:'英文 日文 english' }
 ];
@@ -639,6 +891,7 @@ function openTool(id){
   window.scrollTo(0, 0);
   if (t.ai) timeout(sampleP, 4000).then(s => { $$('[data-noai]').forEach(n => n.hidden = !!s); });
   if (id === 'sign') requestAnimationFrame(sizePad);
+  if (id !== 'scan') closeScanEditor();
   refresh();
 }
 $('#back').addEventListener('click', () => { current = null; $('#tool').hidden = true; $('#home').hidden = false; window.scrollTo(0, 0); });
@@ -646,9 +899,10 @@ $('#back').addEventListener('click', () => { current = null; $('#tool').hidden =
 /* ================= drop zones ================= */
 const DROP = {
   merge: { accept: f => isPdf(f) || isImg(f), multi: true, camera: true, title: '把 PDF 或照片拖到這裡', sub: '至少需要 2 個檔案，可混合 PDF 與照片', pick: '選擇檔案', types: 'application/pdf,.pdf,image/*' },
+  scan: { accept: isImg, multi: true, camera: true, title: '拍下或上傳文件照片', sub: '拍照時讓文件佔滿畫面、光線均勻，效果最好', pick: '選擇照片', types: 'image/*' },
   img2pdf: { accept: isImg, multi: true, camera: true, title: '把照片拖到這裡', sub: '支援 JPG、PNG、WebP、GIF、BMP（HEIC 需用 Safari），可一次選多張', pick: '選擇照片', types: 'image/*' }
 };
-const SINGLE_TITLE = { sign: '把要簽的 PDF 拖到這裡', summary: '把要摘要的 PDF 拖到這裡', translate: '把要翻譯的 PDF 拖到這裡' };
+const SINGLE_TITLE = { form: '把要填寫的 PDF 表單拖到這裡', redact: '把要遮蔽個資的 PDF 拖到這裡', ocr: '把掃描的 PDF 拖到這裡', sign: '把要簽的 PDF 拖到這裡', summary: '把要摘要的 PDF 拖到這裡', translate: '把要翻譯的 PDF 拖到這裡' };
 const UP = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 16V4M6 10l6-6 6 6M4 20h16"/></svg>';
 const CAM = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>';
 $$('[data-drop]').forEach(z => {
@@ -676,10 +930,11 @@ const ICO = {
   left:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg>',
   right:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg>',
   rot:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 12a8 8 0 1 1-2.3-5.7M20 4v5h-5"/></svg>',
-  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>'
+  del:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+  edit:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>'
 };
 let uid = 0;
-function makeGrid(listEl, { rotatable = () => true, onRemove } = {}){
+function makeGrid(listEl, { rotatable = () => true, onRemove, onEdit } = {}){
   const g = { items: [] }; let dragId = null;
   g.move = (id, to) => { const from = g.items.findIndex(i => i.id === id); if (from < 0 || to < 0 || to >= g.items.length) return; const [it] = g.items.splice(from, 1); g.items.splice(to, 0, it); g.render(); };
   g.render = () => {
@@ -691,15 +946,18 @@ function makeGrid(listEl, { rotatable = () => true, onRemove } = {}){
         <span class="num">${idx + 1}</span><div class="nm" title="${esc(it.name)}">${esc(it.name)}${it.sub && it.thumb ? ' · ' + esc(it.sub) : ''}</div>
         <div class="acts"><button type="button" data-a="left" aria-label="往前移">${ICO.left}</button>
         ${rotatable(it) ? `<button type="button" data-a="rot" aria-label="順時針旋轉">${ICO.rot}</button>` : ''}
+        ${onEdit ? `<button type="button" data-a="edit" aria-label="調整裁切與濾鏡">${ICO.edit}</button>` : ''}
         <button type="button" data-a="right" aria-label="往後移">${ICO.right}</button>
         <button type="button" class="del" data-a="del" aria-label="移除">${ICO.del}</button></div>`;
       li.addEventListener('click', e => {
-        const a = e.target.closest('button')?.dataset.a; if (!a) return;
+        const a = e.target.closest('button')?.dataset.a;
+        if (!a) { if (onEdit && e.target.closest('.th')) onEdit(it); return; }
         const i = g.items.indexOf(it);
+        if (a === 'edit') onEdit(it);
         if (a === 'left') g.move(it.id, i - 1);
         if (a === 'right') g.move(it.id, i + 1);
         if (a === 'rot') { it.rot = ((it.rot || 0) + 90) % 360; g.render(); }
-        if (a === 'del') { g.items.splice(i, 1); onRemove && onRemove(it); g.render(); }
+        if (a === 'del') { g.items.splice(i, 1); onRemove && onRemove(it); if (onEdit && scEd && scEd.it === it) closeScanEditor(); g.render(); }
       });
       li.addEventListener('dragstart', e => { dragId = it.id; li.classList.add('dragging'); e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', String(it.id)); });
       li.addEventListener('dragend', () => { dragId = null; g.render(); });
@@ -716,13 +974,20 @@ const revoke = it => it.url && URL.revokeObjectURL(it.url);
 const BINS = {
   merge: makeGrid($('#bin-merge'), { onRemove: revoke }),
   img2pdf: makeGrid($('#bin-img2pdf'), { onRemove: revoke }),
-  organize: makeGrid($('#bin-organize'))
+  organize: makeGrid($('#bin-organize')),
+  scan: makeGrid($('#bin-scan'), { onRemove: revoke, onEdit: it => openScanEditor(it) })
 };
 function addToBin(id, files){
   const g = BINS[id];
   for (const f of files) {
     const it = { id: ++uid, file: f, name: f.name, rot: 0, kind: isPdf(f) ? 'pdf' : 'image' };
-    if (it.kind === 'image') { it.url = it.thumb = URL.createObjectURL(f); }
+    if (it.kind === 'image') {
+      it.url = it.thumb = URL.createObjectURL(f);
+      if (id === 'scan') {
+        it.quad = FULL_QUAD(); it.filter = 'enhance';
+        (async () => { try { it.thumb = (await processScan(it, 420)).toDataURL('image/jpeg', .8); } catch { it.bad = true; it.sub = '無法讀取'; } g.render(); })();
+      }
+    }
     else {
       it.sub = '讀取中…';
       (async () => {
@@ -769,6 +1034,15 @@ function refresh(){
   const ready = {
     merge: BINS.merge.items.length >= 2 && !BINS.merge.items.some(i => i.bad || (i.kind === 'pdf' && !i.pages)),
     img2pdf: BINS.img2pdf.items.length > 0,
+    scan: BINS.scan.items.length > 0 && !BINS.scan.items.some(i => i.bad),
+    remove: !!S.remove && PK.remove.items.some(i => i.on),
+    extract: !!S.extract && PK.extract.items.some(i => i.on),
+    rotate: !!S.rotate && PK.rotate.items.length > 0,
+    edit: !!S.edit && ED.objs.length > 0,
+    form: !!S.form && FM.fields.length > 0,
+    redact: !!S.redact && RD.boxes.length > 0,
+    ocr: !!S.ocr && !ocrBusy,
+    pdf2word: !!S.pdf2word && !ocrBusy,
     organize: !!S.organize && BINS.organize.items.length > 0,
     sign: !!S.sign && !!sigCanvas,
     summary: !!S.summary && !aiBusy,
@@ -783,32 +1057,43 @@ function refresh(){
   const bm = $('[data-go="merge"]'), bi = $('[data-go="img2pdf"]');
   if (!bm.querySelector('.spin')) bm.textContent = nm ? `合併 ${nm} 個檔案` : '合併 PDF';
   if (!bi.querySelector('.spin')) bi.textContent = ni ? `把 ${ni} 張照片轉換成 PDF` : '轉換成 PDF';
+  const bs = $('[data-go="scan"]'), ns = BINS.scan.items.length;
+  if (!bs.querySelector('.spin')) bs.textContent = ns ? `把 ${ns} 張文件照片產生 PDF` : '產生 PDF';
 }
 const go = (id, label, fn) => $(`[data-go="${id}"]`).addEventListener('click', e => withBusy(e.currentTarget, label, () => fn(e.currentTarget)));
 
 /* ================= image → page ================= */
 const QUALITY = { high: { q: .92, max: 3500 }, mid: { q: .82, max: 2200 }, low: { q: .62, max: 1500 } };
 const SIZES = { a4: [595.28, 841.89], letter: [612, 792] };
-async function imageToJpeg(it, q, maxDim){
-  const img = new Image(); img.src = it.url;
+async function decodeImg(url){
+  const img = new Image(); img.src = url;
   try { await img.decode(); } catch { throw new Error('image decode failed'); }
-  let w = img.naturalWidth, h = img.naturalHeight;
-  const s = Math.min(1, maxDim / Math.max(w, h)); w = Math.max(1, Math.round(w*s)); h = Math.max(1, Math.round(h*s));
-  const rot = ((it.rot % 360) + 360) % 360, swap = rot === 90 || rot === 270;
-  const c = document.createElement('canvas'); c.width = swap ? h : w; c.height = swap ? w : h;
-  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
-  ctx.translate(c.width/2, c.height/2); ctx.rotate(rot * Math.PI / 180); ctx.drawImage(img, -w/2, -h/2, w, h);
-  return { bytes: await canvasBytes(c, 'image/jpeg', q), w: c.width, h: c.height };
+  return img;
 }
-async function addImagePage(pdf, it, o){
-  const { bytes, w, h } = await imageToJpeg(it, o.q, o.max);
-  const jpg = await pdf.embedJpg(bytes); const m = o.margin; let pw, ph;
+function rotateCanvas(src, deg){
+  const rot = ((deg || 0) % 360 + 360) % 360; if (!rot) return src;
+  const swap = rot === 90 || rot === 270, c = document.createElement('canvas');
+  c.width = swap ? src.height : src.width; c.height = swap ? src.width : src.height;
+  const ctx = c.getContext('2d'); ctx.translate(c.width/2, c.height/2); ctx.rotate(rot * Math.PI / 180); ctx.drawImage(src, -src.width/2, -src.height/2);
+  return c;
+}
+async function imageCanvas(it, maxDim){
+  const img = await decodeImg(it.url);
+  const s = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+  const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(img.naturalWidth*s)); c.height = Math.max(1, Math.round(img.naturalHeight*s));
+  const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height); ctx.drawImage(img, 0, 0, c.width, c.height);
+  return rotateCanvas(c, it.rot);
+}
+async function addCanvasPage(pdf, c, o){
+  const w = c.width, h = c.height, jpg = await pdf.embedJpg(await canvasBytes(c, 'image/jpeg', o.q));
+  const m = o.margin; let pw, ph;
   if (o.size === 'fit') { pw = w*0.75 + 2*m; ph = h*0.75 + 2*m; }
   else { [pw, ph] = SIZES[o.size]; const land = o.orient === 'land' || (o.orient === 'auto' && w > h); if (land) [pw, ph] = [ph, pw]; }
   const page = pdf.addPage([pw, ph]);
   const sc = Math.min((pw - 2*m) / w, (ph - 2*m) / h), dw = w*sc, dh = h*sc;
   page.drawImage(jpg, { x: (pw - dw)/2, y: (ph - dh)/2, width: dw, height: dh });
 }
+async function addImagePage(pdf, it, o){ await addCanvasPage(pdf, await imageCanvas(it, o.max), o); }
 
 /* ---------- img2pdf ---------- */
 go('img2pdf', '轉換中…', async () => {
@@ -954,32 +1239,53 @@ async function extractPlain(doc, maxChars = Infinity){
   return { pages, truncated, chars: pages.reduce((s, p) => s + p.text.length, 0) };
 }
 
+/* ---------- text → blocks ---------- */
+const BULLET = /^[•●▪■◦·‧・\-–]\s*/, NUMRE = /^\(?(\d{1,3})[.)、]\s+/;
+const joinT = (s, t) => s ? (CJK.test(s.slice(-1)) && CJK.test(t[0]) ? s + t : s + ' ' + t) : t;
+function medianH(all){ const hs = all.flat().map(l => l.h).sort((a, b) => a - b); return hs.length ? hs[Math.floor(hs.length / 2)] : 0; }
+function linesToBlocks(lines, body, useH = true){
+  const out = []; let para = [], prevY = null, prevH = body;
+  const flush = () => { if (para.length) { out.push({ t: 'p', text: para.reduce(joinT, '') }); para = []; } };
+  for (const l of lines) {
+    const r = l.h / body, t = l.text, gap = prevY == null ? 0 : prevY - l.y;
+    if (useH && r >= 1.15 && t.length < 120) { flush(); out.push({ t: 'h', level: r >= 1.7 ? 1 : r >= 1.35 ? 2 : 3, text: t }); }
+    else if (BULLET.test(t)) { flush(); out.push({ t: 'li', text: t.replace(BULLET, '') }); }
+    else if (NUMRE.test(t) && t.length < 200) { flush(); out.push({ t: 'ol', n: t.match(NUMRE)[1], text: t.replace(NUMRE, '') }); }
+    else { if (prevY != null && gap > Math.max(prevH, l.h) * 1.75) flush(); para.push(t); }
+    prevY = l.y; prevH = l.h;
+  }
+  flush(); return out;
+}
+function textToBlocks(text){ return text.split(/\n{2,}/).map(p => p.split('\n').map(x => x.trim()).filter(Boolean).reduce(joinT, '')).filter(Boolean).map(t => ({ t: 'p', text: t })); }
+function blocksToMd(pages, sep){
+  const md = [];
+  pages.forEach((bl, pi) => {
+    if (pi && sep) md.push('', '---', '');
+    let prevList = false;
+    bl.forEach(b => {
+      const isList = b.t === 'li' || b.t === 'ol';
+      if (prevList && !isList) md.push('');
+      if (b.t === 'h') md.push('#'.repeat(b.level) + ' ' + b.text, '');
+      else if (b.t === 'li') md.push('- ' + b.text);
+      else if (b.t === 'ol') md.push(b.n + '. ' + b.text);
+      else md.push(b.text, '');
+      prevList = isList;
+    });
+    if (prevList) md.push('');
+  });
+  return md.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
+}
+
 /* ---------- pdf2md ---------- */
 ON_CLOSE.pdf2md = () => { $('#md-result').hidden = true; };
 go('pdf2md', '擷取中…', async btn => {
-  const st = S.pdf2md, doc = st.doc, all = [];
-  for (let i = 1; i <= st.n; i++) { progressLabel(btn, `擷取中… ${i} / ${st.n}`); all.push(await pageLines(doc, i)); }
-  const hs = all.flat().map(l => Math.round(l.h * 10) / 10).sort((a, b) => a - b);
-  if (!hs.length) throw userErr('這份 PDF 裡沒有可擷取的文字，可能是掃描檔或圖片。');
-  const body = hs[Math.floor(hs.length / 2)], useH = $('#md-headings').checked, sep = $('#md-pagebreak').checked;
-  const md = [];
-  all.forEach((lines, pi) => {
-    if (pi && sep) md.push('', '---', '');
-    let para = [], prevY = null, prevH = body;
-    const flush = () => { if (para.length) { md.push(para.reduce((s, t) => s ? (CJK.test(s.slice(-1)) && CJK.test(t[0]) ? s + t : s + ' ' + t) : t, ''), ''); para = []; } };
-    lines.forEach(l => {
-      const r = l.h / body; let t = l.text;
-      const gap = prevY == null ? 0 : prevY - l.y;
-      if (useH && r >= 1.15 && t.length < 120) { flush(); md.push((r >= 1.7 ? '# ' : r >= 1.35 ? '## ' : '### ') + t, ''); prevY = l.y; prevH = l.h; return; }
-      if (/^[•●▪■◦·‧・\-–]\s*/.test(t)) { flush(); md.push('- ' + t.replace(/^[•●▪■◦·‧・\-–]\s*/, '')); prevY = l.y; prevH = l.h; return; }
-      if (/^\(?\d{1,3}[.)、]\s+/.test(t) && t.length < 200) { flush(); md.push(t.replace(/^\(?(\d{1,3})[.)、]\s+/, '$1. ')); prevY = l.y; prevH = l.h; return; }
-      if (prevY != null && gap > Math.max(prevH, l.h) * 1.75) flush();
-      para.push(t); prevY = l.y; prevH = l.h;
-    });
-    flush();
-  });
-  const text = md.join('\n').replace(/\n{3,}/g, '\n\n').trim() + '\n';
-  $('#md-out').value = text; $('#md-result').hidden = false;
+  const st = S.pdf2md, all = [];
+  for (let i = 1; i <= st.n; i++) { progressLabel(btn, `擷取中… ${i} / ${st.n}`); all.push(await pageLines(st.doc, i)); }
+  const body = medianH(all);
+  if (!body) throw userErr('這份 PDF 裡沒有可擷取的文字，可能是掃描檔。可以先用「OCR 文字辨識」處理。');
+  const useH = $('#md-headings').checked;
+  $('#md-out').value = blocksToMd(all.map(l => linesToBlocks(l, body, useH)), $('#md-pagebreak').checked);
+  $('#md-result').hidden = false;
   toast('擷取完成，可以先檢查再下載');
 });
 $('#md-save').addEventListener('click', () => saveFile($('#md-out').value, baseName(S.pdf2md ? S.pdf2md.file.name : 'document') + '.md', 'text/markdown'));
@@ -1234,6 +1540,769 @@ go('sign', '簽署中…', async () => {
     if (dateImg) { const dw = dateC.width / 4, dh = dateC.height / 4; drawCentered(d.getPage(i), vp, dateImg, x + b.w/2, y + b.h + b.dh/2, dw, dh); }
   }
   await savePdf(await d.save(), baseName(st.file.name) + '-已簽署.pdf');
+});
+
+/* ================= shared: lazy scripts, viewers, pickers ================= */
+const LIBS = {
+  tess: 'https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js',
+  docx: 'https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js',
+  pptx: 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'
+};
+const scriptCache = {};
+function loadScript(src){
+  return scriptCache[src] || (scriptCache[src] = new Promise((res, rej) => {
+    const el = document.createElement('script'); el.src = src; el.onload = res;
+    el.onerror = () => { delete scriptCache[src]; el.remove(); rej(userErr('元件下載失敗，請檢查網路後再試一次')); };
+    document.head.appendChild(el);
+  }));
+}
+function rectToPdf(vp, x, y, w, h){
+  const [x1, y1] = vp.convertToPdfPoint(x, y), [x2, y2] = vp.convertToPdfPoint(x + w, y + h);
+  return { x: Math.min(x1, x2), y: Math.min(y1, y2), width: Math.abs(x2 - x1), height: Math.abs(y2 - y1) };
+}
+const hexRgb = h => P.rgb(parseInt(h.slice(1, 3), 16) / 255, parseInt(h.slice(3, 5), 16) / 255, parseInt(h.slice(5, 7), 16) / 255);
+const hexA = (h, a) => `rgba(${parseInt(h.slice(1, 3), 16)},${parseInt(h.slice(3, 5), 16)},${parseInt(h.slice(5, 7), 16)},${a})`;
+
+function makeViewer(host){
+  host.innerHTML = `<div class="pager"><button class="btn sm" type="button" data-d="-1" aria-label="上一頁">‹</button><span class="pg"></span><button class="btn sm" type="button" data-d="1" aria-label="下一頁">›</button></div><div class="stage"><canvas></canvas><div class="layer"></div></div>`;
+  const v = { page: 1, n: 0, doc: null, vw: 1, vh: 1, vp: null, stage: $('.stage', host), layer: $('.layer', host), canvas: $('canvas', host), onShow: null, token: 0 };
+  $$('[data-d]', host).forEach(b => b.addEventListener('click', () => v.show(v.page + +b.dataset.d)));
+  v.show = async n => {
+    if (!v.doc) return; const t = ++v.token;
+    v.page = Math.min(Math.max(1, n), v.n);
+    $('.pg', host).textContent = `第 ${v.page} / ${v.n} 頁`;
+    $('[data-d="-1"]', host).disabled = v.page <= 1; $('[data-d="1"]', host).disabled = v.page >= v.n;
+    const r = await renderPage(v.doc, v.page, { width: 1000 });
+    if (t !== v.token) return;
+    v.canvas.width = r.canvas.width; v.canvas.height = r.canvas.height; v.canvas.getContext('2d').drawImage(r.canvas, 0, 0);
+    v.vp = r.page.getViewport({ scale: 1 }); v.vw = v.vp.width; v.vh = v.vp.height;
+    v.onShow && v.onShow();
+  };
+  v.load = async doc => { v.doc = doc; v.n = doc.numPages; await v.show(1); };
+  v.clear = () => { v.doc = null; v.layer.innerHTML = ''; };
+  v.pt = e => { const r = v.layer.getBoundingClientRect(); return { x: (e.clientX - r.left) / r.width * v.vw, y: (e.clientY - r.top) / r.height * v.vh }; };
+  v.k = () => v.layer.getBoundingClientRect().width / v.vw;
+  v.box = (el, x, y, w, h) => { el.style.left = x / v.vw * 100 + '%'; el.style.top = y / v.vh * 100 + '%'; el.style.width = w / v.vw * 100 + '%'; el.style.height = h / v.vh * 100 + '%'; };
+  return v;
+}
+
+function makePicker(listEl, kind){ // kind: del | pick | rot
+  const p = { items: [], onChange: null };
+  p.render = focusIdx => {
+    listEl.innerHTML = '';
+    p.items.forEach((it, idx) => {
+      const li = document.createElement('li');
+      li.className = 'card pk' + (it.on ? ' on' : '') + (kind === 'del' ? ' danger' : ''); li.tabIndex = 0;
+      if (kind === 'rot') li.setAttribute('role', 'button'); else { li.setAttribute('role', 'checkbox'); li.setAttribute('aria-checked', !!it.on); }
+      const r = it.rot || 0, sc = (r % 180) ? ' scale(.74)' : '';
+      li.innerHTML = `<div class="th">${it.thumb ? `<img alt="" src="${it.thumb}" style="transform:rotate(${r}deg)${sc}">` : '<div class="pdfmark"><small>載入中…</small></div>'}</div>
+        ${kind !== 'rot' ? `<span class="chk" aria-hidden="true">${kind === 'del' ? '✕' : '✓'}</span>` : ''}
+        <div class="nm">第 ${it.i + 1} 頁${r ? ` · 已轉 ${r}°` : ''}</div>
+        ${kind === 'rot' ? `<div class="acts"><button type="button" data-a="ccw" aria-label="逆時針旋轉">${ICO.rot.replace('<svg ', '<svg style="transform:scaleX(-1)" ')}</button><button type="button" data-a="cw" aria-label="順時針旋轉">${ICO.rot}</button></div>` : ''}`;
+      const act = a => { if (kind === 'rot') it.rot = ((it.rot || 0) + (a === 'ccw' ? 270 : 90)) % 360; else it.on = !it.on; p.render(idx); };
+      li.addEventListener('click', e => { e.stopPropagation(); act(e.target.closest('button')?.dataset.a || 'cw'); });
+      li.addEventListener('keydown', e => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); act('cw'); } });
+      listEl.appendChild(li);
+    });
+    if (focusIdx != null && listEl.children[focusIdx]) listEl.children[focusIdx].focus({ preventScroll: true });
+    p.onChange && p.onChange(); refresh();
+  };
+  return p;
+}
+async function loadThumbs(id, p){
+  const st = S[id]; p.items = [...Array(st.n).keys()].map(i => ({ i, on: false, rot: 0 })); p.render();
+  for (let k = 0; k < p.items.length; k++) {
+    if (S[id] !== st) return;
+    try { p.items[k].thumb = (await renderPage(st.doc, k + 1, { width: 200 })).canvas.toDataURL('image/jpeg', .75); } catch {}
+    if (k % 4 === 3 || k === p.items.length - 1) p.render();
+  }
+}
+
+/* ---------- remove / extract / rotate ---------- */
+const PK = { remove: makePicker($('#pk-remove'), 'del'), extract: makePicker($('#pk-extract'), 'pick'), rotate: makePicker($('#pk-rotate'), 'rot') };
+['remove', 'extract', 'rotate'].forEach(id => {
+  ON_LOAD[id] = () => { loadThumbs(id, PK[id]); };
+  ON_CLOSE[id] = () => { PK[id].items = []; PK[id].render(); };
+});
+['remove', 'extract'].forEach(id => {
+  const p = PK[id];
+  p.onChange = () => { const n = p.items.filter(i => i.on).length; $(`[data-count="${id}"]`).textContent = n ? `已選 ${n} 頁` : ''; };
+  $(`[data-range-apply="${id}"]`).addEventListener('click', () => {
+    try { const idx = new Set(parseRange($(`#${id}-range`).value, p.items.length)); p.items.forEach(it => it.on = idx.has(it.i)); p.render(); }
+    catch (e) { toast(errMsg(e), 5000); }
+  });
+  $(`#${id}-range`).addEventListener('keydown', e => { if (e.key === 'Enter') $(`[data-range-apply="${id}"]`).click(); });
+  $(`[data-sel-all="${id}"]`).addEventListener('click', () => { p.items.forEach(it => it.on = true); p.render(); });
+  $(`[data-sel-none="${id}"]`).addEventListener('click', () => { p.items.forEach(it => it.on = false); p.render(); });
+});
+$('#rot-all-cw').addEventListener('click', () => { PK.rotate.items.forEach(i => i.rot = (i.rot + 90) % 360); PK.rotate.render(); });
+$('#rot-all-ccw').addEventListener('click', () => { PK.rotate.items.forEach(i => i.rot = (i.rot + 270) % 360); PK.rotate.render(); });
+$('#rot-reset').addEventListener('click', () => { PK.rotate.items.forEach(i => i.rot = 0); PK.rotate.render(); });
+
+go('remove', '刪除中…', async () => {
+  const st = S.remove, del = new Set(PK.remove.items.filter(i => i.on).map(i => i.i));
+  if (del.size >= st.n) throw userErr('不能刪除全部頁面，至少要留一頁');
+  const src = await libDoc(st.bytes), out = await P.PDFDocument.create();
+  (await out.copyPages(src, src.getPageIndices().filter(i => !del.has(i)))).forEach(p => out.addPage(p));
+  await savePdf(await out.save(), baseName(st.file.name) + '-已刪頁.pdf');
+});
+go('extract', '提取中…', async () => {
+  const st = S.extract, idx = PK.extract.items.filter(i => i.on).map(i => i.i), base = baseName(st.file.name);
+  const src = await libDoc(st.bytes);
+  if ($('input[name=ext-mode]:checked').value === 'one' || idx.length === 1) {
+    const out = await P.PDFDocument.create(); (await out.copyPages(src, idx)).forEach(p => out.addPage(p));
+    await savePdf(await out.save(), idx.length === 1 ? `${base}-第${idx[0] + 1}頁.pdf` : `${base}-提取.pdf`);
+  } else {
+    const files = [];
+    for (const i of idx) { const out = await P.PDFDocument.create(); const [pg] = await out.copyPages(src, [i]); out.addPage(pg); files.push({ name: `${base}-第${i + 1}頁.pdf`, data: await out.save() }); }
+    await saveZip(files, `${base}-提取.zip`);
+  }
+});
+go('rotate', '儲存中…', async () => {
+  const st = S.rotate, items = PK.rotate.items.filter(i => i.rot);
+  if (!items.length) throw userErr('還沒有旋轉任何頁面，點縮圖就能旋轉');
+  const d = await libDoc(st.bytes);
+  items.forEach(it => { const pg = d.getPage(it.i); pg.setRotation(P.degrees((pg.getRotation().angle + it.rot) % 360)); });
+  await savePdf(await d.save(), baseName(st.file.name) + '-已旋轉.pdf');
+});
+
+/* ---------- scan ---------- */
+const FULL_QUAD = () => [[0, 0], [1, 0], [1, 1], [0, 1]];
+const isFullQuad = q => q.every((p, i) => Math.abs(p[0] - FULL_QUAD()[i][0]) < 1e-3 && Math.abs(p[1] - FULL_QUAD()[i][1]) < 1e-3);
+function solve8(A, b){
+  const n = 8, M = A.map((r, i) => [...r, b[i]]);
+  for (let c = 0; c < n; c++) {
+    let piv = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[piv][c])) piv = r;
+    [M[c], M[piv]] = [M[piv], M[c]];
+    for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c] / M[c][c]; for (let k = c; k <= n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map((r, i) => r[n] / r[i]);
+}
+function homography(from, to){
+  const A = [], b = [];
+  for (let i = 0; i < 4; i++) {
+    const [x, y] = from[i], [u, v] = to[i];
+    A.push([x, y, 1, 0, 0, 0, -u*x, -u*y]); b.push(u);
+    A.push([0, 0, 0, x, y, 1, -v*x, -v*y]); b.push(v);
+  }
+  return solve8(A, b);
+}
+function warp(src, q){
+  const dist = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1]);
+  const W = Math.max(2, Math.round(Math.max(dist(q[0], q[1]), dist(q[3], q[2])))), H = Math.max(2, Math.round(Math.max(dist(q[0], q[3]), dist(q[1], q[2]))));
+  const h = homography([[0, 0], [W, 0], [W, H], [0, H]], q);
+  const sw = src.width, sh = src.height, sd = src.getContext('2d').getImageData(0, 0, sw, sh).data;
+  const out = document.createElement('canvas'); out.width = W; out.height = H;
+  const oc = out.getContext('2d'), od = oc.createImageData(W, H), o = od.data;
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const den = h[6]*x + h[7]*y + 1;
+    let sx = (h[0]*x + h[1]*y + h[2]) / den, sy = (h[3]*x + h[4]*y + h[5]) / den;
+    sx = Math.min(Math.max(sx, 0), sw - 1.001); sy = Math.min(Math.max(sy, 0), sh - 1.001);
+    const x0 = sx | 0, y0 = sy | 0, fx = sx - x0, fy = sy - y0;
+    const i00 = (y0*sw + x0) * 4, i10 = i00 + 4, i01 = i00 + sw*4, i11 = i01 + 4, k = (y*W + x) * 4;
+    for (let c = 0; c < 3; c++) o[k + c] = (sd[i00 + c]*(1 - fx) + sd[i10 + c]*fx)*(1 - fy) + (sd[i01 + c]*(1 - fx) + sd[i11 + c]*fx)*fy;
+    o[k + 3] = 255;
+  }
+  oc.putImageData(od, 0, 0); return out;
+}
+function applyFilter(c, f){
+  if (f === 'color') return;
+  const W = c.width, H = c.height, ctx = c.getContext('2d'), id = ctx.getImageData(0, 0, W, H), d = id.data, n = W * H;
+  const L = new Uint8ClampedArray(n), hist = new Uint32Array(256);
+  for (let i = 0, j = 0; i < n; i++, j += 4) { L[i] = (d[j]*299 + d[j+1]*587 + d[j+2]*114) / 1000; hist[L[i]]++; }
+  const pct = p => { let acc = 0; const t = n * p; for (let v = 0; v < 256; v++) { acc += hist[v]; if (acc >= t) return v; } return 255; };
+  const lo = pct(.02), hi = Math.max(lo + 1, pct(.96)), sc = 255 / (hi - lo);
+  if (f === 'enhance') { for (let j = 0; j < d.length; j += 4) for (let c2 = 0; c2 < 3; c2++) d[j + c2] = (d[j + c2] - lo) * sc; }
+  else if (f === 'gray') { for (let i = 0, j = 0; i < n; i++, j += 4) d[j] = d[j+1] = d[j+2] = (L[i] - lo) * sc; }
+  else if (f === 'bw') {
+    const I = new Float64Array((W + 1) * (H + 1));
+    for (let y = 0; y < H; y++) { let row = 0; for (let x = 0; x < W; x++) { row += L[y*W + x]; I[(y + 1)*(W + 1) + x + 1] = I[y*(W + 1) + x + 1] + row; } }
+    const half = Math.max(4, Math.floor(Math.max(W, H) / 32)), T = 0.14;
+    for (let y = 0; y < H; y++) {
+      const y1 = Math.max(0, y - half), y2 = Math.min(H, y + half + 1);
+      for (let x = 0; x < W; x++) {
+        const x1 = Math.max(0, x - half), x2 = Math.min(W, x + half + 1), cnt = (x2 - x1) * (y2 - y1);
+        const sum = I[y2*(W + 1) + x2] - I[y1*(W + 1) + x2] - I[y2*(W + 1) + x1] + I[y1*(W + 1) + x1];
+        const v = L[y*W + x] * cnt <= sum * (1 - T) ? 0 : 255, j = (y*W + x) * 4;
+        d[j] = d[j+1] = d[j+2] = v;
+      }
+    }
+  }
+  ctx.putImageData(id, 0, 0);
+}
+async function processScan(it, maxDim, quad = it.quad, filter = it.filter){
+  const img = it.img || (it.img = await decodeImg(it.url));
+  const s = Math.min(1, maxDim / Math.max(img.naturalWidth, img.naturalHeight));
+  const W0 = Math.max(2, Math.round(img.naturalWidth * s)), H0 = Math.max(2, Math.round(img.naturalHeight * s));
+  const src = document.createElement('canvas'); src.width = W0; src.height = H0;
+  const sctx = src.getContext('2d'); sctx.fillStyle = '#fff'; sctx.fillRect(0, 0, W0, H0); sctx.drawImage(img, 0, 0, W0, H0);
+  const c = isFullQuad(quad) ? src : warp(src, quad.map(([x, y]) => [x * W0, y * H0]));
+  applyFilter(c, filter);
+  return c;
+}
+let scEd = null, scT = null;
+const scanHandles = [0, 1, 2, 3].map(i => {
+  const h = document.createElement('div'); h.className = 'qh'; h.setAttribute('aria-label', ['左上角', '右上角', '右下角', '左下角'][i]); h.tabIndex = 0;
+  $('#scan-q').appendChild(h);
+  let drag = false;
+  h.addEventListener('pointerdown', e => { e.preventDefault(); h.setPointerCapture(e.pointerId); drag = true; });
+  h.addEventListener('pointermove', e => {
+    if (!drag || !scEd) return; const r = $('#scan-q').getBoundingClientRect();
+    scEd.quad[i] = [Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)), Math.min(1, Math.max(0, (e.clientY - r.top) / r.height))];
+    drawQuad(); scanPreview();
+  });
+  const end = () => { drag = false; }; h.addEventListener('pointerup', end); h.addEventListener('pointercancel', end);
+  h.addEventListener('keydown', e => {
+    const m = { ArrowLeft: [-.01, 0], ArrowRight: [.01, 0], ArrowUp: [0, -.01], ArrowDown: [0, .01] }[e.key]; if (!m || !scEd) return; e.preventDefault();
+    scEd.quad[i] = [Math.min(1, Math.max(0, scEd.quad[i][0] + m[0])), Math.min(1, Math.max(0, scEd.quad[i][1] + m[1]))]; drawQuad(); scanPreview();
+  });
+  return h;
+});
+function drawQuad(){
+  if (!scEd) return;
+  $('#scan-poly').setAttribute('points', scEd.quad.map(p => p.join(',')).join(' '));
+  scEd.quad.forEach((p, i) => { scanHandles[i].style.left = p[0] * 100 + '%'; scanHandles[i].style.top = p[1] * 100 + '%'; });
+}
+function scanPreview(){
+  clearTimeout(scT);
+  scT = setTimeout(async () => {
+    if (!scEd) return; const ed = scEd;
+    const c = await processScan(ed.it, 520, ed.quad, ed.filter); if (ed !== scEd) return;
+    const o = $('#scan-out'); o.width = c.width; o.height = c.height; o.getContext('2d').drawImage(c, 0, 0);
+  }, 90);
+}
+async function openScanEditor(it){
+  try {
+    const img = it.img || (it.img = await decodeImg(it.url));
+    scEd = { it, quad: it.quad.map(p => p.slice()), filter: it.filter };
+    const s = Math.min(1, 1000 / Math.max(img.naturalWidth, img.naturalHeight)), cv = $('#scan-src');
+    cv.width = Math.round(img.naturalWidth * s); cv.height = Math.round(img.naturalHeight * s); cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+    $$('input[name=scan-filter]').forEach(r => r.checked = r.value === scEd.filter);
+    $('#scan-editor').hidden = false; drawQuad(); scanPreview();
+    $('#scan-editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (e) { toast(errMsg(e), 5000); }
+}
+function closeScanEditor(){ scEd = null; $('#scan-editor').hidden = true; }
+$$('input[name=scan-filter]').forEach(r => r.addEventListener('change', () => { if (scEd) { scEd.filter = r.value; scanPreview(); } }));
+$('#scan-reset').addEventListener('click', () => { if (!scEd) return; scEd.quad = FULL_QUAD(); drawQuad(); scanPreview(); });
+$('#scan-cancel').addEventListener('click', closeScanEditor);
+async function rethumb(it){ it.thumb = (await processScan(it, 420)).toDataURL('image/jpeg', .8); }
+$('#scan-apply').addEventListener('click', async () => {
+  if (!scEd) return; const it = scEd.it; it.quad = scEd.quad; it.filter = scEd.filter; closeScanEditor();
+  await rethumb(it); BINS.scan.render(); toast('已套用');
+});
+$('#scan-filter-all').addEventListener('click', async () => {
+  if (!scEd) return; const f = scEd.filter; scEd.it.quad = scEd.quad; closeScanEditor();
+  for (const it of BINS.scan.items) { it.filter = f; try { await rethumb(it); } catch {} }
+  BINS.scan.render(); toast('已把濾鏡套用到全部照片');
+});
+go('scan', '產生中…', async btn => {
+  const qq = QUALITY[$('#scan-quality').value], o = { size: $('#scan-size').value, orient: 'auto', margin: 0, q: qq.q };
+  const pdf = await P.PDFDocument.create(), items = BINS.scan.items;
+  for (let k = 0; k < items.length; k++) {
+    progressLabel(btn, `產生中… ${k + 1} / ${items.length}`);
+    await addCanvasPage(pdf, rotateCanvas(await processScan(items[k], qq.max), items[k].rot), o);
+  }
+  await savePdf(await pdf.save(), '掃描文件-' + stamp() + '.pdf');
+});
+
+/* ---------- OCR engine ---------- */
+const OCR_LANGS = [['chi_tra+eng', '繁體中文＋英文'], ['chi_sim+eng', '簡體中文＋英文'], ['jpn+eng', '日文＋英文'], ['kor+eng', '韓文＋英文'], ['eng', '英文']];
+$$('.ocr-lang').forEach(sel => sel.innerHTML = OCR_LANGS.map(([v, n]) => `<option value="${v}">${n}</option>`).join(''));
+let ocrW = null, ocrLang = null, ocrLog = null, ocrBusy = false;
+async function getOcr(lang, onLog){
+  ocrLog = onLog;
+  if (ocrW && ocrLang === lang) return ocrW;
+  await loadScript(LIBS.tess);
+  if (ocrW) { try { await ocrW.terminate(); } catch {} ocrW = null; }
+  try { ocrW = await Tesseract.createWorker(lang, 1, { logger: m => ocrLog && ocrLog(m) }); }
+  catch (e) { console.error(e); throw userErr('辨識引擎無法啟動。請確認網路連線；如果是在 Claude 裡開啟，請改到 GitHub 上的網站使用這個功能。'); }
+  ocrLang = lang; return ocrW;
+}
+const cleanOcr = t => t.replace(/([\u3000-\u9fff\uff00-\uffef])[ \t]+(?=[\u3000-\u9fff\uff00-\uffef])/g, '$1').replace(/[ \t]+\n/g, '\n').trim();
+async function ocrPage(w, doc, num, wantPdf){
+  const { canvas } = await renderPage(doc, num, { scale: 3, rotation: 0, maxDim: 3000 });
+  const r = await w.recognize(canvas, wantPdf ? { pdfTextOnly: true } : {}, { text: true, pdf: !!wantPdf });
+  canvas.width = canvas.height = 0;
+  return { text: cleanOcr(r.data.text || ''), pdf: r.data.pdf ? new Uint8Array(r.data.pdf) : null };
+}
+async function pageHasText(doc, num){
+  const tc = await (await doc.getPage(num)).getTextContent();
+  return tc.items.map(i => i.str).join('').replace(/\s/g, '').length >= 10;
+}
+function ocrLogger(statusEl, curRef){
+  return m => {
+    if (m.status === 'recognizing text') statusEl.textContent = `${curRef.t}　辨識進度 ${Math.round(m.progress * 100)}%`;
+    else if (/load|initiali/i.test(m.status)) statusEl.textContent = '正在準備辨識引擎與語言資料…' + (m.progress ? ` ${Math.round(m.progress * 100)}%` : '');
+  };
+}
+
+/* ---------- OCR tool ---------- */
+ON_CLOSE.ocr = () => { $('#ocr-result').hidden = true; $('#ocr-status').hidden = true; };
+go('ocr', '辨識中…', async btn => {
+  const st = S.ocr, lang = $('#ocr-lang').value, mode = $('input[name=ocr-out]:checked').value;
+  const idx = parseRange($('#ocr-range').value, st.n), skip = $('#ocr-skip').checked;
+  const status = $('#ocr-status'); status.hidden = false; status.className = 'info'; $('#ocr-result').hidden = true;
+  const cur = { t: '' }; ocrBusy = true;
+  try {
+    const w = await getOcr(lang, ocrLogger(status, cur));
+    const d = mode === 'pdf' ? await libDoc(st.bytes) : null, texts = [];
+    let done = 0, skipped = 0;
+    for (const k of idx) {
+      done++; cur.t = `第 ${k + 1} 頁（${done} / ${idx.length}）`; progressLabel(btn, `辨識中… ${done} / ${idx.length}`); status.textContent = cur.t;
+      if (skip && await pageHasText(st.doc, k + 1)) {
+        skipped++;
+        if (mode === 'txt') texts.push(`—— 第 ${k + 1} 頁 ——\n` + (await pageLines(st.doc, k + 1)).map(l => l.text).join('\n'));
+        continue;
+      }
+      const r = await ocrPage(w, st.doc, k + 1, mode === 'pdf');
+      if (d) {
+        const vp0 = (await st.doc.getPage(k + 1)).getViewport({ scale: 1, rotation: 0 });
+        const [emb] = await d.embedPdf(r.pdf, [0]), [x0, y0] = vp0.convertToPdfPoint(0, vp0.height);
+        d.getPage(k).drawPage(emb, { x: x0, y: y0, width: vp0.width, height: vp0.height });
+      } else texts.push(`—— 第 ${k + 1} 頁 ——\n${r.text}`);
+    }
+    const n = idx.length - skipped;
+    if (mode === 'pdf') {
+      if (!n) throw userErr('選取的頁面都已經有文字了，不需要 OCR。想重新辨識的話，請取消勾選「略過已經有文字的頁面」。');
+      status.className = 'info good'; status.textContent = `完成！辨識了 ${n} 頁` + (skipped ? `，另有 ${skipped} 頁本來就有文字所以略過` : '') + '。現在可以在 PDF 裡搜尋和複製文字了。';
+      await savePdf(await d.save(), baseName(st.file.name) + '-可搜尋.pdf');
+    } else {
+      $('#ocr-out').value = texts.join('\n\n'); $('#ocr-result').hidden = false;
+      status.className = 'info good'; status.textContent = `完成！共 ${idx.length} 頁，可以先檢查內容再下載。`;
+    }
+  } catch (e) { status.className = 'info warn'; status.textContent = errMsg(e); throw e; }
+  finally { ocrBusy = false; }
+});
+$('#ocr-save').addEventListener('click', () => saveFile($('#ocr-out').value, baseName(S.ocr ? S.ocr.file.name : 'ocr') + '-文字.txt', 'text/plain'));
+$('#ocr-copy').addEventListener('click', () => copyText($('#ocr-out').value));
+
+/* ---------- PDF → Word ---------- */
+function syncWord(){ const t = $('input[name=w-mode]:checked').value === 'text'; $('#w-ocr-f').hidden = !t; $('#w-lang-f').hidden = !t || !$('#w-ocr').checked; }
+$$('input[name=w-mode]').forEach(r => r.addEventListener('change', syncWord)); $('#w-ocr').addEventListener('change', syncWord); syncWord();
+ON_CLOSE.pdf2word = () => { $('#w-status').hidden = true; };
+go('pdf2word', '轉換中…', async btn => {
+  const st = S.pdf2word, mode = $('input[name=w-mode]:checked').value, status = $('#w-status');
+  status.hidden = true; progressLabel(btn, '載入 Word 元件…');
+  await loadScript(LIBS.docx); const D = window.docx;
+  const FONT_W = 'Microsoft JhengHei', sections = [];
+  if (mode === 'layout') {
+    for (let i = 1; i <= st.n; i++) {
+      progressLabel(btn, `轉換中… ${i} / ${st.n}`);
+      const { canvas, page } = await renderPage(st.doc, i, { scale: 2, maxDim: 3200 });
+      const vp = page.getViewport({ scale: 1 }), land = vp.width > vp.height;
+      const data = await canvasBytes(canvas, 'image/jpeg', .85); canvas.width = canvas.height = 0;
+      sections.push({
+        properties: { page: { size: { width: Math.round(Math.min(vp.width, vp.height) * 20), height: Math.round(Math.max(vp.width, vp.height) * 20), orientation: land ? D.PageOrientation.LANDSCAPE : D.PageOrientation.PORTRAIT }, margin: { top: 0, right: 0, bottom: 0, left: 0, header: 0, footer: 0 } } },
+        children: [new D.Paragraph({ spacing: { before: 0, after: 0, line: 240 }, children: [new D.ImageRun({ data, transformation: { width: vp.width * 96 / 72 * .985, height: vp.height * 96 / 72 * .985 } })] })]
+      });
+    }
+  } else {
+    const all = [];
+    for (let i = 1; i <= st.n; i++) { progressLabel(btn, `讀取文字… ${i} / ${st.n}`); all.push(await pageLines(st.doc, i)); }
+    const body = medianH(all) || 11, pages = all.map(l => linesToBlocks(l, body));
+    const empty = pages.map((b, i) => b.length ? -1 : i).filter(i => i >= 0);
+    if (empty.length && $('#w-ocr').checked) {
+      status.hidden = false; status.className = 'info'; const cur = { t: '' }; ocrBusy = true;
+      try {
+        const w = await getOcr($('#w-lang').value, ocrLogger(status, cur));
+        for (let k = 0; k < empty.length; k++) {
+          cur.t = `OCR 辨識第 ${empty[k] + 1} 頁（${k + 1} / ${empty.length}）`; status.textContent = cur.t; progressLabel(btn, `OCR 辨識中… ${k + 1} / ${empty.length}`);
+          pages[empty[k]] = textToBlocks((await ocrPage(w, st.doc, empty[k] + 1, false)).text);
+        }
+      } finally { ocrBusy = false; }
+      status.className = 'info good'; status.textContent = `有 ${empty.length} 頁是掃描內容，已用 OCR 辨識。辨識結果可能有錯字，請再檢查一次。`;
+    } else if (pages.every(b => !b.length)) throw userErr('這份 PDF 沒有可擷取的文字，可能是掃描檔。請勾選 OCR 選項，或改用「保留原版面」。');
+    const H = [D.HeadingLevel.HEADING_1, D.HeadingLevel.HEADING_2, D.HeadingLevel.HEADING_3], children = [];
+    pages.forEach((bl, pi) => {
+      if (!bl.length) { children.push(new D.Paragraph({ pageBreakBefore: pi > 0, children: [] })); return; }
+      bl.forEach((b, bi) => {
+        const pageBreakBefore = pi > 0 && bi === 0;
+        if (b.t === 'h') children.push(new D.Paragraph({ heading: H[b.level - 1], pageBreakBefore, children: [new D.TextRun(b.text)] }));
+        else if (b.t === 'li') children.push(new D.Paragraph({ bullet: { level: 0 }, pageBreakBefore, children: [new D.TextRun(b.text)] }));
+        else if (b.t === 'ol') children.push(new D.Paragraph({ indent: { left: 360, hanging: 360 }, pageBreakBefore, children: [new D.TextRun(`${b.n}. ${b.text}`)] }));
+        else children.push(new D.Paragraph({ spacing: { after: 160, line: 320 }, pageBreakBefore, children: [new D.TextRun(b.text)] }));
+      });
+    });
+    sections.push({ children });
+  }
+  progressLabel(btn, '打包 Word 檔…');
+  const doc = new D.Document({ creator: 'PDF 工具箱', styles: { default: { document: { run: { font: FONT_W, size: 22 } }, heading1: { run: { font: FONT_W, size: 36, bold: true } }, heading2: { run: { font: FONT_W, size: 30, bold: true } }, heading3: { run: { font: FONT_W, size: 26, bold: true } } } }, sections });
+  await saveFile(await D.Packer.toBlob(doc), baseName(st.file.name) + '.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+});
+
+/* ---------- PDF → PowerPoint ---------- */
+go('pdf2ppt', '轉換中…', async btn => {
+  const st = S.pdf2ppt, scale = +$('#ppt-q').value, notes = $('#ppt-notes').checked;
+  progressLabel(btn, '載入 PowerPoint 元件…'); await loadScript(LIBS.pptx);
+  const pptx = new PptxGenJS(), vp1 = (await st.doc.getPage(1)).getViewport({ scale: 1 });
+  let W = vp1.width / 72, H = vp1.height / 72; const k0 = Math.min(1, 56 / Math.max(W, H)); W *= k0; H *= k0;
+  pptx.defineLayout({ name: 'PDF', width: W, height: H }); pptx.layout = 'PDF';
+  for (let i = 1; i <= st.n; i++) {
+    progressLabel(btn, `轉換中… ${i} / ${st.n}`);
+    const { canvas, page } = await renderPage(st.doc, i, { scale, maxDim: 4000 });
+    const vp = page.getViewport({ scale: 1 }), s = Math.min(W / (vp.width / 72), H / (vp.height / 72)), w = vp.width / 72 * s, h = vp.height / 72 * s;
+    const slide = pptx.addSlide(); slide.background = { color: 'FFFFFF' };
+    slide.addImage({ data: canvas.toDataURL('image/jpeg', .88), x: (W - w) / 2, y: (H - h) / 2, w, h });
+    canvas.width = canvas.height = 0;
+    if (notes) { const t = (await pageLines(st.doc, i)).map(l => l.text).join('\n'); if (t) slide.addNotes(t); }
+  }
+  progressLabel(btn, '打包簡報檔…');
+  await saveFile(await pptx.write({ outputType: 'blob' }), baseName(st.file.name) + '.pptx', 'application/vnd.openxmlformats-officedocument.presentationml.presentation');
+});
+
+/* ---------- edit PDF ---------- */
+const ED = { objs: [], sel: null, mode: 'select', size: 16, bold: false, stroke: 2, colors: { text: '#111111', rect: '#d12c2c', hl: '#f5c400', pen: '#2449d8' } };
+const COLORS = [['#111111', '黑色'], ['#d12c2c', '紅色'], ['#2449d8', '藍色'], ['#1e8a4c', '綠色'], ['#f5c400', '黃色'], ['#ff7ac6', '粉紅']];
+const TYPE_NAME = { text: '文字', image: '圖片', rect: '方框', hl: '螢光筆', pen: '手寫', white: '白色遮蓋' };
+const MODE_HINT = { select: '點物件可以拖曳移動；拖右下角的圓點可以縮放。', text: '在頁面上點一下，放入文字。', rect: '在頁面上拖曳，畫出方框。', hl: '拖曳框出要標示的範圍。', pen: '按住拖曳就能手寫或畫線。', white: '拖曳框出要蓋掉的內容。注意：只是蓋住，原本的文字還在檔案裡；要真正刪除請用「標記密文」。' };
+const edView = makeViewer($('#ed-view'));
+let edUid = 0;
+const selObj = () => ED.objs.find(o => o.id === ED.sel);
+ON_LOAD.edit = async () => { ED.objs = []; ED.sel = null; setEdMode('select'); await edView.load(S.edit.doc); renderEdProps(); };
+ON_CLOSE.edit = () => { ED.objs = []; ED.sel = null; edView.clear(); };
+edView.onShow = () => { renderEdObjs(); };
+const mctx = document.createElement('canvas').getContext('2d');
+function measureText(o){
+  mctx.font = `${o.bold ? 700 : 400} ${o.size}px ${FONT}`;
+  const lines = (o.text || ' ').split('\n');
+  o.w = Math.max(6, ...lines.map(l => mctx.measureText(l || ' ').width)) + o.size * 0.1; o.h = lines.length * o.size * 1.35;
+}
+function textBlockCanvas(o, s){
+  const c = document.createElement('canvas'); c.width = Math.ceil(o.w * s); c.height = Math.ceil(o.h * s);
+  const x = c.getContext('2d'); x.font = `${o.bold ? 700 : 400} ${o.size * s}px ${FONT}`; x.fillStyle = o.color; x.textBaseline = 'middle';
+  o.text.split('\n').forEach((l, i) => x.fillText(l, 0, (i + 0.5) * o.size * 1.35 * s));
+  return c;
+}
+function penCanvas(o, s){
+  const c = document.createElement('canvas'); c.width = Math.ceil(o.w * s); c.height = Math.ceil(o.h * s);
+  const x = c.getContext('2d'); x.strokeStyle = o.color; x.lineWidth = o.stroke * s; x.lineCap = x.lineJoin = 'round';
+  x.beginPath(); o.pts.forEach(([px, py], i) => { const X = px * o.w * s, Y = py * o.h * s; i ? x.lineTo(X, Y) : x.moveTo(X, Y); });
+  if (o.pts.length === 1) x.lineTo(o.pts[0][0] * o.w * s + .1, o.pts[0][1] * o.h * s);
+  x.stroke(); return c;
+}
+const penSvg = o => `<svg viewBox="0 0 ${o.w} ${o.h}" preserveAspectRatio="none"><polyline points="${o.pts.map(p => (p[0] * o.w).toFixed(2) + ',' + (p[1] * o.h).toFixed(2)).join(' ')}" fill="none" stroke="${o.color}" stroke-width="${o.stroke}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+function renderEdObjs(){
+  const L = edView.layer; L.innerHTML = ''; if (!edView.doc) return;
+  const k = edView.k();
+  for (const o of ED.objs.filter(o => o.page === edView.page)) {
+    const el = document.createElement('div'); el.className = 'eo' + (o.id === ED.sel ? ' sel' : ''); el.dataset.id = o.id;
+    if (o.type === 'text') { el.classList.add('t'); el.textContent = o.text; el.style.color = o.color; el.style.fontSize = o.size * k + 'px'; el.style.fontWeight = o.bold ? 700 : 400; }
+    else if (o.type === 'rect') el.style.border = `${Math.max(1, o.stroke * k)}px solid ${o.color}`;
+    else if (o.type === 'hl') { el.style.background = hexA(o.color, .4); el.style.mixBlendMode = 'multiply'; }
+    else if (o.type === 'white') { el.style.background = '#fff'; el.style.boxShadow = '0 0 0 1px rgba(0,0,0,.12)'; }
+    else if (o.type === 'image') el.innerHTML = `<img alt="" src="${o.src}">`;
+    else if (o.type === 'pen') el.innerHTML = penSvg(o);
+    edView.box(el, o.x, o.y, o.w, o.h);
+    if (o.id === ED.sel) el.insertAdjacentHTML('beforeend', '<span class="hd" data-h="1"></span><button class="x" type="button" aria-label="刪除">×</button>');
+    L.appendChild(el);
+  }
+}
+function setEdMode(m){
+  ED.mode = m; $$('#ed-tools [data-mode]').forEach(b => b.setAttribute('aria-pressed', b.dataset.mode === m));
+  edView.stage.classList.toggle('drawing', ['text', 'rect', 'hl', 'pen', 'white'].includes(m));
+  if (m !== 'select') { ED.sel = null; renderEdObjs(); }
+  renderEdProps();
+}
+$$('#ed-tools [data-mode]').forEach(b => b.addEventListener('click', () => {
+  if (b.dataset.mode === 'image') { $('#ed-img').click(); return; }
+  setEdMode(b.dataset.mode);
+}));
+$('#ed-img').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f || !edView.doc) return;
+  const url = URL.createObjectURL(f);
+  try {
+    const img = await decodeImg(url), s = Math.min(1, 1600 / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement('canvas'); c.width = Math.round(img.naturalWidth * s); c.height = Math.round(img.naturalHeight * s);
+    c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+    const w = edView.vw * 0.4, h = w * c.height / c.width;
+    const o = { id: ++edUid, page: edView.page, type: 'image', src: c.toDataURL('image/png'), x: (edView.vw - w) / 2, y: Math.max(0, (edView.vh - h) / 2), w, h };
+    ED.objs.push(o); ED.sel = o.id; setEdMode('select'); renderEdObjs(); renderEdProps(); refresh();
+  } catch { toast('這張圖片無法讀取，請改用 JPG 或 PNG'); } finally { URL.revokeObjectURL(url); }
+});
+function deleteSel(){ ED.objs = ED.objs.filter(o => o.id !== ED.sel); ED.sel = null; renderEdObjs(); renderEdProps(); refresh(); }
+function renderEdProps(){
+  const o = selObj(), type = o ? o.type : ED.mode, box = $('#ed-props');
+  const showColor = ['text', 'rect', 'hl', 'pen'].includes(type), showText = type === 'text', showStroke = ['rect', 'pen'].includes(type);
+  const curColor = o ? o.color : ED.colors[type];
+  const pages = [...new Set(ED.objs.map(x => x.page))].sort((a, b) => a - b);
+  box.innerHTML = `<p class="hint" style="margin:0">${o ? '已選取：<b>' + TYPE_NAME[o.type] + '</b>' : (MODE_HINT[ED.mode] || '')}</p>
+    ${showText && o ? `<label class="f">文字內容<textarea id="ed-text" rows="3"></textarea></label>` : ''}
+    ${showText ? `<label class="f">字體大小<select id="ed-size">${[8, 10, 12, 14, 16, 20, 24, 32, 48, 64].map(v => `<option ${v === (o ? o.size : ED.size) ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
+      <label class="f check"><input type="checkbox" id="ed-bold" ${(o ? o.bold : ED.bold) ? 'checked' : ''}> 粗體</label>` : ''}
+    ${showColor ? `<div class="f">顏色<div class="swatches">${COLORS.map(([c, n]) => `<button type="button" data-c="${c}" aria-label="${n}" aria-pressed="${curColor === c}" style="background:${c}"></button>`).join('')}</div></div>` : ''}
+    ${showStroke ? `<label class="f">線條粗細<select id="ed-stroke">${[1, 2, 3, 5, 8].map(v => `<option ${v === (o ? o.stroke : ED.stroke) ? 'selected' : ''}>${v}</option>`).join('')}</select></label>` : ''}
+    ${o ? '<button class="btn sm" type="button" id="ed-del">刪除這個物件</button>' : ''}
+    <p class="hint" style="margin:0">共 ${ED.objs.length} 個物件${pages.length ? '（第 ' + pages.join('、') + ' 頁）' : ''}</p>`;
+  const ta = $('#ed-text', box);
+  if (ta) { ta.value = o.text; ta.addEventListener('input', () => { o.text = ta.value; measureText(o); renderEdObjs(); }); }
+  $('#ed-size', box)?.addEventListener('change', e => { const v = +e.target.value; if (o) { o.size = v; measureText(o); renderEdObjs(); } else ED.size = v; });
+  $('#ed-bold', box)?.addEventListener('change', e => { if (o) { o.bold = e.target.checked; measureText(o); renderEdObjs(); } else ED.bold = e.target.checked; });
+  $('#ed-stroke', box)?.addEventListener('change', e => { const v = +e.target.value; if (o) { o.stroke = v; renderEdObjs(); } else ED.stroke = v; });
+  $$('[data-c]', box).forEach(b => b.addEventListener('click', () => { if (o) { o.color = b.dataset.c; renderEdObjs(); } else ED.colors[type] = b.dataset.c; renderEdProps(); }));
+  $('#ed-del', box)?.addEventListener('click', deleteSel);
+}
+(() => {
+  const L = edView.layer; let act = null, tmp = null;
+  L.addEventListener('pointerdown', e => {
+    if (!edView.doc) return;
+    if (e.target.closest('.x')) { e.preventDefault(); deleteSel(); return; }
+    e.preventDefault(); L.setPointerCapture(e.pointerId);
+    const p = edView.pt(e), oel = e.target.closest('.eo'), o = oel && ED.objs.find(x => x.id === +oel.dataset.id);
+    if (e.target.dataset.h && o) { act = { t: 'resize', o, p, w: o.w, h: o.h, size: o.size, stroke: o.stroke }; return; }
+    if (o && (ED.mode === 'select' || ED.mode === 'text')) {
+      if (ED.mode !== 'select') setEdMode('select');
+      ED.sel = o.id; act = { t: 'move', o, p, x: o.x, y: o.y }; renderEdObjs(); renderEdProps(); return;
+    }
+    if (ED.mode === 'select') { if (ED.sel) { ED.sel = null; renderEdObjs(); renderEdProps(); } return; }
+    if (ED.mode === 'text') {
+      const n = { id: ++edUid, page: edView.page, type: 'text', text: '在這裡輸入文字', size: ED.size, bold: ED.bold, color: ED.colors.text, x: p.x, y: p.y };
+      measureText(n); n.x = Math.min(n.x, Math.max(0, edView.vw - n.w)); n.y = Math.min(Math.max(0, n.y - n.h / 2), edView.vh - n.h);
+      ED.objs.push(n); ED.sel = n.id; setEdMode('select'); renderEdObjs(); renderEdProps(); refresh();
+      const ta = $('#ed-text'); if (ta) { ta.focus(); ta.select(); }
+      return;
+    }
+    if (ED.mode === 'pen') {
+      act = { t: 'pen', pts: [[p.x, p.y]] };
+      tmp = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); tmp.setAttribute('viewBox', `0 0 ${edView.vw} ${edView.vh}`);
+      tmp.setAttribute('style', 'position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible');
+      tmp.innerHTML = `<polyline fill="none" stroke="${ED.colors.pen}" stroke-width="${ED.stroke}" stroke-linecap="round" stroke-linejoin="round"/>`;
+      L.appendChild(tmp); return;
+    }
+    const n = { id: ++edUid, page: edView.page, type: ED.mode, x: p.x, y: p.y, w: 0, h: 0, color: ED.colors[ED.mode] || '#ffffff', stroke: ED.stroke };
+    ED.objs.push(n); act = { t: 'new', o: n, p };
+  });
+  L.addEventListener('pointermove', e => {
+    if (!act) return; const p = edView.pt(e);
+    if (act.t === 'move') {
+      const o = act.o; o.x = Math.min(Math.max(-o.w / 2, act.x + p.x - act.p.x), edView.vw - o.w / 2); o.y = Math.min(Math.max(-o.h / 2, act.y + p.y - act.p.y), edView.vh - o.h / 2); renderEdObjs();
+    } else if (act.t === 'resize') {
+      const o = act.o, nw = Math.max(8, act.w + p.x - act.p.x);
+      if (o.type === 'text') { o.size = Math.max(4, Math.round(act.size * nw / act.w * 2) / 2); measureText(o); }
+      else if (o.type === 'image' || o.type === 'pen') { o.w = nw; o.h = act.h * nw / act.w; }
+      else { o.w = nw; o.h = Math.max(4, act.h + p.y - act.p.y); }
+      renderEdObjs();
+    } else if (act.t === 'new') {
+      const o = act.o; o.x = Math.min(act.p.x, p.x); o.y = Math.min(act.p.y, p.y); o.w = Math.abs(p.x - act.p.x); o.h = Math.abs(p.y - act.p.y); renderEdObjs();
+    } else if (act.t === 'pen') {
+      const l = act.pts[act.pts.length - 1]; if (Math.hypot(p.x - l[0], p.y - l[1]) < 0.8) return;
+      act.pts.push([p.x, p.y]); tmp.firstChild.setAttribute('points', act.pts.map(q => q.join(',')).join(' '));
+    }
+  });
+  const end = () => {
+    if (!act) return;
+    if (act.t === 'new') {
+      const o = act.o;
+      if (o.w < 4 && o.h < 4) { o.w = o.type === 'hl' ? 140 : 120; o.h = o.type === 'hl' ? 16 : 60; }
+      o.w = Math.max(o.w, 4); o.h = Math.max(o.h, 4);
+      renderEdObjs(); renderEdProps(); refresh();
+    } else if (act.t === 'pen') {
+      tmp && tmp.remove(); tmp = null;
+      const pts = act.pts, pad = ED.stroke;
+      const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+      const x0 = Math.min(...xs) - pad, y0 = Math.min(...ys) - pad, w = Math.max(...xs) - x0 + pad, h = Math.max(...ys) - y0 + pad;
+      ED.objs.push({ id: ++edUid, page: edView.page, type: 'pen', color: ED.colors.pen, stroke: ED.stroke, x: x0, y: y0, w, h, pts: pts.map(([x, y]) => [(x - x0) / w, (y - y0) / h]) });
+      renderEdObjs(); renderEdProps(); refresh();
+    } else if (act.t === 'move' || act.t === 'resize') renderEdProps();
+    act = null;
+  };
+  L.addEventListener('pointerup', end); L.addEventListener('pointercancel', end);
+})();
+document.addEventListener('keydown', e => {
+  if (current !== 'edit' || !ED.sel || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) return;
+  const o = selObj(); if (!o) return;
+  if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); deleteSel(); return; }
+  const s = e.shiftKey ? 10 : 1, m = { ArrowLeft: [-s, 0], ArrowRight: [s, 0], ArrowUp: [0, -s], ArrowDown: [0, s] }[e.key];
+  if (m) { e.preventDefault(); o.x += m[0]; o.y += m[1]; renderEdObjs(); }
+  if (e.key === 'Escape') { ED.sel = null; renderEdObjs(); renderEdProps(); }
+});
+window.addEventListener('resize', () => { if (current === 'edit') renderEdObjs(); });
+go('edit', '儲存中…', async () => {
+  const st = S.edit, d = await libDoc(st.bytes);
+  try { await document.fonts.load(`400 16px "Noto Sans TC"`); await document.fonts.load(`700 16px "Noto Sans TC"`); } catch {}
+  for (const o of ED.objs) {
+    const page = d.getPage(o.page - 1), vp = (await st.doc.getPage(o.page)).getViewport({ scale: 1 });
+    if (o.type === 'rect' || o.type === 'hl' || o.type === 'white') {
+      const r = rectToPdf(vp, o.x, o.y, o.w, o.h);
+      if (o.type === 'rect') page.drawRectangle({ ...r, borderColor: hexRgb(o.color), borderWidth: o.stroke });
+      else if (o.type === 'white') page.drawRectangle({ ...r, color: P.rgb(1, 1, 1) });
+      else page.drawRectangle({ ...r, color: hexRgb(o.color), opacity: .4, blendMode: P.BlendMode.Multiply });
+      continue;
+    }
+    let c;
+    if (o.type === 'text') { if (!o.text.trim()) continue; measureText(o); c = textBlockCanvas(o, 4); }
+    else if (o.type === 'pen') c = penCanvas(o, 4);
+    else { const im = await decodeImg(o.src); c = document.createElement('canvas'); c.width = im.naturalWidth; c.height = im.naturalHeight; c.getContext('2d').drawImage(im, 0, 0); }
+    const img = await d.embedPng(await canvasBytes(c));
+    drawCentered(page, vp, img, o.x + o.w / 2, o.y + o.h / 2, o.w, o.h);
+  }
+  await savePdf(await d.save(), baseName(st.file.name) + '-已編輯.pdf');
+});
+
+/* ---------- PDF form ---------- */
+const FM = { fields: [] }, fmView = makeViewer($('#form-view'));
+ON_LOAD.form = async () => {
+  const d = await libDoc(S.form.bytes), form = d.getForm(), pages = d.getPages();
+  FM.fields = [];
+  for (const f of form.getFields()) {
+    const type = f instanceof P.PDFTextField ? 'text' : f instanceof P.PDFCheckBox ? 'check' : f instanceof P.PDFRadioGroup ? 'radio' : f instanceof P.PDFDropdown ? 'drop' : f instanceof P.PDFOptionList ? 'list' : null;
+    if (!type) continue;
+    let val = '', opts = [];
+    try {
+      if (type === 'text') val = f.getText() || '';
+      else if (type === 'check') val = f.isChecked();
+      else if (type === 'radio') { opts = f.getOptions(); val = f.getSelected() || ''; }
+      else { opts = f.getOptions(); val = (f.getSelected() || [])[0] || ''; }
+    } catch {}
+    const widgets = f.acroField.getWidgets().map((w, wi) => {
+      const ref = d.context.getObjectRef(w.dict), pg = ref ? d.findPageForAnnotationRef(ref) : undefined;
+      return { page: pg ? pages.indexOf(pg) + 1 : 0, rect: w.getRectangle(), opt: opts[wi] };
+    }).filter(w => w.page > 0);
+    if (!widgets.length) continue;
+    FM.fields.push({ name: f.getName(), type, val, opts, ro: f.isReadOnly(), multi: type === 'text' && f.isMultiline(), max: type === 'text' ? f.getMaxLength() : undefined, widgets });
+  }
+  const info = $('#form-info');
+  if (!FM.fields.length) {
+    info.hidden = false; info.className = 'info warn';
+    info.innerHTML = '這份 PDF 沒有可以填寫的表單欄位。你可以改用「編輯 PDF」，直接在頁面上打字。 <button class="btn sm" type="button" id="form-to-edit" style="margin-left:6px">改用編輯 PDF</button>';
+    $('#form-to-edit').addEventListener('click', () => { const f = S.form.file; openTool('edit'); openSingle('edit', f); });
+    fmView.clear(); return;
+  }
+  info.hidden = true;
+  $('#form-count').textContent = `找到 ${FM.fields.length} 個欄位，分布在第 ${[...new Set(FM.fields.flatMap(f => f.widgets.map(w => w.page)))].sort((a, b) => a - b).join('、')} 頁。`;
+  await fmView.load(S.form.doc);
+};
+ON_CLOSE.form = () => { FM.fields = []; fmView.clear(); $('#form-info').hidden = true; };
+fmView.onShow = () => {
+  const L = fmView.layer; L.innerHTML = ''; const k = fmView.k(), vp = fmView.vp;
+  FM.fields.forEach((F, fi) => F.widgets.forEach(w => {
+    if (w.page !== fmView.page) return;
+    const r = w.rect, [ax, ay] = vp.convertToViewportPoint(r.x, r.y), [bx, by] = vp.convertToViewportPoint(r.x + r.width, r.y + r.height);
+    const x = Math.min(ax, bx), y = Math.min(ay, by), bw = Math.abs(bx - ax), bh = Math.abs(by - ay);
+    const box = document.createElement('div'); box.className = 'fw'; fmView.box(box, x, y, bw, bh); box.title = F.name;
+    let el;
+    if (F.type === 'text') {
+      el = document.createElement(F.multi ? 'textarea' : 'input'); if (!F.multi) el.type = 'text';
+      el.value = F.val; if (F.max) el.maxLength = F.max;
+      el.style.fontSize = Math.max(6, Math.min(bh * 0.62, 13)) * k + 'px';
+      el.addEventListener('input', () => { F.val = el.value; });
+    } else if (F.type === 'check') {
+      el = document.createElement('input'); el.type = 'checkbox'; el.checked = !!F.val; el.addEventListener('change', () => { F.val = el.checked; });
+    } else if (F.type === 'radio') {
+      el = document.createElement('input'); el.type = 'radio'; el.name = 'fm-' + fi; el.checked = F.val === w.opt && !!w.opt;
+      el.addEventListener('change', () => { if (el.checked) F.val = w.opt; });
+    } else {
+      el = document.createElement('select'); el.innerHTML = '<option value=""></option>' + F.opts.map(o => `<option ${o === F.val ? 'selected' : ''}>${esc(o)}</option>`).join('');
+      el.style.fontSize = Math.max(6, Math.min(bh * 0.62, 13)) * k + 'px'; el.addEventListener('change', () => { F.val = el.value; });
+    }
+    el.disabled = F.ro; el.setAttribute('aria-label', F.name);
+    box.appendChild(el); L.appendChild(box);
+  }));
+};
+window.addEventListener('resize', () => { if (current === 'form' && fmView.doc) fmView.onShow(); });
+$('#form-clear').addEventListener('click', () => { FM.fields.forEach(F => { if (!F.ro) F.val = F.type === 'check' ? false : ''; }); fmView.onShow(); });
+go('form', '儲存中…', async () => {
+  const d = await libDoc(S.form.bytes), form = d.getForm(), helv = await d.embedFont(P.StandardFonts.Helvetica);
+  const cjk = [];
+  for (const F of FM.fields) {
+    if (F.ro) continue; let f; try { f = form.getField(F.name); } catch { continue; }
+    try {
+      if (F.type === 'text') { f.setText(F.val || ''); try { f.defaultUpdateAppearances(helv); } catch { cjk.push(F); } }
+      else if (F.type === 'check') { F.val ? f.check() : f.uncheck(); }
+      else if (F.type === 'radio') { if (F.val) f.select(F.val); else f.clear(); }
+      else { if (F.val) f.select(F.val); else f.clear(); try { f.defaultUpdateAppearances(helv); } catch { cjk.push(F); } }
+    } catch (e) { console.warn('field', F.name, e); }
+  }
+  const flat = $('#form-flat').checked;
+  if (flat) {
+    for (const F of cjk) {
+      const text = String(F.val || '');
+      if (text) for (const w of F.widgets) {
+        const r = w.rect, fs = Math.max(6, Math.min(12, r.height * 0.65)), c = await textCanvas(text.split('\n')[0], fs * 4, '#000000', 400);
+        const img = await d.embedPng(await canvasBytes(c)); let dw = c.width / 4, dh = c.height / 4;
+        if (dw > r.width - 2) { const k2 = (r.width - 2) / dw; dw *= k2; dh *= k2; }
+        d.getPage(w.page - 1).drawImage(img, { x: r.x + 1, y: r.y + (r.height - dh) / 2, width: dw, height: dh });
+      }
+      try { form.removeField(form.getField(F.name)); } catch {}
+    }
+    try { form.flatten({ updateFieldAppearances: false }); } catch (e) { console.warn(e); toast('部分欄位無法鎖定，已保留為可填寫的欄位', 5000); }
+  } else if (cjk.length) form.acroForm.dict.set(P.PDFName.of('NeedAppearances'), P.PDFBool.True);
+  await savePdf(await d.save({ updateFieldAppearances: false }), baseName(S.form.file.name) + '-已填寫.pdf');
+});
+
+/* ---------- redact ---------- */
+const RD = { boxes: [] }, rdView = makeViewer($('#rd-view'));
+rdView.stage.classList.add('drawing');
+let rdUid = 0;
+ON_LOAD.redact = async () => { RD.boxes = []; rdCount(); await rdView.load(S.redact.doc); };
+ON_CLOSE.redact = () => { RD.boxes = []; rdView.clear(); rdCount(); };
+function rdCount(){
+  const n = RD.boxes.length, pages = [...new Set(RD.boxes.map(b => b.page))].sort((a, b) => a - b);
+  $('#rd-count').textContent = n ? `已標記 ${n} 處，在第 ${pages.join('、')} 頁` : '尚未標記'; refresh();
+}
+function renderRd(){
+  const L = rdView.layer; L.innerHTML = '';
+  RD.boxes.filter(b => b.page === rdView.page).forEach(b => {
+    const el = document.createElement('div'); el.className = 'rb'; el.dataset.id = b.id; rdView.box(el, b.x, b.y, b.w, b.h);
+    el.innerHTML = '<button class="x" type="button" aria-label="移除這個標記">×</button>'; L.appendChild(el);
+  });
+}
+rdView.onShow = renderRd;
+(() => {
+  const L = rdView.layer; let act = null;
+  L.addEventListener('pointerdown', e => {
+    if (!rdView.doc) return;
+    const x = e.target.closest('.x');
+    if (x) { e.preventDefault(); const id = +x.parentNode.dataset.id; RD.boxes = RD.boxes.filter(b => b.id !== id); renderRd(); rdCount(); return; }
+    e.preventDefault(); L.setPointerCapture(e.pointerId);
+    const p = rdView.pt(e), b = { id: ++rdUid, page: rdView.page, x: p.x, y: p.y, w: 0, h: 0 }; RD.boxes.push(b); act = { b, p };
+  });
+  L.addEventListener('pointermove', e => {
+    if (!act) return; const p = rdView.pt(e), b = act.b;
+    b.x = Math.min(act.p.x, p.x); b.y = Math.min(act.p.y, p.y); b.w = Math.abs(p.x - act.p.x); b.h = Math.abs(p.y - act.p.y); renderRd();
+  });
+  const end = () => { if (!act) return; const b = act.b; if (b.w < 3 || b.h < 3) RD.boxes = RD.boxes.filter(x => x !== b); act = null; renderRd(); rdCount(); };
+  L.addEventListener('pointerup', end); L.addEventListener('pointercancel', end);
+})();
+$('#rd-search').addEventListener('click', async () => {
+  const q = $('#rd-q').value.trim(), st = S.redact; if (!q || !st) { toast('請先輸入要搜尋的文字'); return; }
+  const ql = q.toLowerCase(); let found = 0;
+  for (let i = 1; i <= st.n; i++) {
+    const page = await st.doc.getPage(i), vp = page.getViewport({ scale: 1 }), tc = await page.getTextContent();
+    for (const it of tc.items) {
+      const str = it.str || '', low = str.toLowerCase(), t = it.transform; if (!str || Math.abs(t[1]) > 0.01) continue;
+      const fh = Math.hypot(t[2], t[3]) || it.height || 10;
+      let from = 0, idx;
+      while ((idx = low.indexOf(ql, from)) >= 0) {
+        from = idx + ql.length;
+        const x1 = t[4] + it.width * idx / str.length, x2 = t[4] + it.width * (idx + ql.length) / str.length;
+        const [ax, ay] = vp.convertToViewportPoint(x1, t[5] - fh * 0.25), [bx, by] = vp.convertToViewportPoint(x2, t[5] + fh * 0.95);
+        const b = { id: ++rdUid, page: i, x: Math.min(ax, bx) - 1, y: Math.min(ay, by) - 1, w: Math.abs(bx - ax) + 2, h: Math.abs(by - ay) + 2 };
+        if (!RD.boxes.some(o => o.page === b.page && Math.abs(o.x - b.x) < 1 && Math.abs(o.y - b.y) < 1)) { RD.boxes.push(b); found++; }
+      }
+    }
+  }
+  renderRd(); rdCount();
+  toast(found ? `找到並標記了 ${found} 處「${q}」` : `找不到「${q}」。如果是掃描檔，請改用手動框選。`, 4500);
+});
+$('#rd-q').addEventListener('keydown', e => { if (e.key === 'Enter') $('#rd-search').click(); });
+$('#rd-clear').addEventListener('click', () => { RD.boxes = []; renderRd(); rdCount(); });
+go('redact', '處理中…', async btn => {
+  const st = S.redact, src = await libDoc(st.bytes), out = await P.PDFDocument.create();
+  for (let i = 0; i < st.n; i++) {
+    progressLabel(btn, `處理中… ${i + 1} / ${st.n}`);
+    const boxes = RD.boxes.filter(b => b.page === i + 1);
+    if (!boxes.length) { const [cp] = await out.copyPages(src, [i]); out.addPage(cp); continue; }
+    const { canvas, scale, page } = await renderPage(st.doc, i + 1, { scale: 2.5, maxDim: 5000 });
+    const ctx = canvas.getContext('2d'); ctx.fillStyle = '#000';
+    boxes.forEach(b => ctx.fillRect(Math.floor(b.x * scale), Math.floor(b.y * scale), Math.ceil(b.w * scale) + 1, Math.ceil(b.h * scale) + 1));
+    const vp1 = page.getViewport({ scale: 1 }), img = await out.embedJpg(await canvasBytes(canvas, 'image/jpeg', .9));
+    canvas.width = canvas.height = 0;
+    out.addPage([vp1.width, vp1.height]).drawImage(img, { x: 0, y: 0, width: vp1.width, height: vp1.height });
+  }
+  if (!$('#rd-meta').checked) { try { out.setTitle(src.getTitle() || ''); out.setAuthor(src.getAuthor() || ''); out.setSubject(src.getSubject() || ''); } catch {} }
+  else { out.setProducer(''); out.setCreator(''); }
+  await savePdf(await out.save(), baseName(st.file.name) + '-已遮蔽.pdf');
 });
 
 /* ================= AI ================= */
