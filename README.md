@@ -20,6 +20,10 @@
 | 轉換 | PDF 轉 Word | 可編輯文字（保留標題、段落、清單，掃描頁自動 OCR）或保留原版面 |
 | 轉換 | PDF 轉 PowerPoint | 每頁一張投影片，可把頁面文字放進備忘稿 |
 | 轉換 | PDF 轉 Markdown | 擷取文字，依字體大小判斷標題、辨識清單 |
+| Office 轉 PDF | Word 轉 PDF | .docx 轉 PDF，保留標題、清單、表格、圖片；也可用瀏覽器列印產生可選取文字的 PDF |
+| Office 轉 PDF | Excel 轉 PDF | .xlsx／.xls／.ods／.csv，可選工作表、自動橫向、縮小到一頁寬 |
+| Office 轉 PDF | PPT 轉 PDF | .pptx 轉 PDF，支援母片、版面配置、文字、圖片、基本圖形、表格、背景 |
+| Office 轉 PDF | HTML 轉 PDF | 上傳 .html 或貼上程式碼，自動避免把文字和區塊切成兩半 |
 | 編輯 | 編輯 PDF | 加入文字、圖片、方框、螢光筆、手寫、白色遮蓋 |
 | 編輯 | PDF 表單 | 直接在表單欄位上填寫，可選擇鎖定內容 |
 | 編輯 | 添加頁碼 | 6 種位置、中英文格式、封面可不編號 |
@@ -31,7 +35,7 @@
 ## 使用的套件（透過 CDN 載入）
 
 - [pdf-lib](https://pdf-lib.js.org/)、[PDF.js](https://mozilla.github.io/pdf.js/)、[JSZip](https://stuk.github.io/jszip/)
-- 需要時才載入：[Tesseract.js](https://tesseract.projectnaptha.com/)（OCR）、[docx](https://docx.js.org/)（Word）、[PptxGenJS](https://gitbrent.github.io/PptxGenJS/)（PowerPoint）
+- 需要時才載入：[Tesseract.js](https://tesseract.projectnaptha.com/)（OCR）、[docx](https://docx.js.org/)（Word）、[PptxGenJS](https://gitbrent.github.io/PptxGenJS/)（PowerPoint）、[mammoth](https://github.com/mwilliamson/mammoth.js)（讀取 Word）、[SheetJS](https://sheetjs.com/)（讀取 Excel）、[html2canvas](https://html2canvas.hertzen.com/)（HTML 排版）
 
 ## 部署
 
@@ -43,6 +47,8 @@
 - 「標準」與「強力」壓縮會把頁面轉成圖片，文字將無法選取。
 - PDF 轉 Word 的「可編輯文字」模式不保留原本的排版與表格。
 - OCR 準確度取決於掃描品質，辨識結果可能有錯字。
+- Office 轉 PDF 產生的頁面是高解析度圖片，文字無法選取（Word、HTML 可改用「瀏覽器列印」）。
+- PPT 轉 PDF 不支援圖表、SmartArt、特殊效果；舊版 .doc／.ppt 需先另存成 .docx／.pptx。
 
 ## 授權
 

@@ -210,6 +210,10 @@ textarea.out{width:100%;font-family:ui-monospace,Menlo,Consolas,monospace;font-s
 .qwrap svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .qh{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;background:rgba(36,73,216,.2);border:3px solid #2449D8;touch-action:none;cursor:grab}
 #scan-out{max-width:100%;border-radius:6px;box-shadow:0 1px 4px rgba(0,0,0,.2);background:#fff}
+.pvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin-top:18px}
+.pvgrid figure{margin:0;text-align:center}
+.pvgrid img{display:block;width:100%;background:#fff;border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.pvgrid figcaption{font-size:.75rem;color:var(--muted);margin-top:3px}
 footer{margin-top:26px;color:var(--muted);font-size:.82rem;text-align:center}
 </style>
 </head>
@@ -641,6 +645,76 @@ footer{margin-top:26px;color:var(--muted);font-size:.82rem;text-align:center}
         <button class="btn primary go" data-go="redact" disabled>套用並儲存</button>
       </div>
 
+      <!-- word2pdf -->
+      <div data-view="word2pdf">
+        <div class="drop" data-drop="word2pdf"></div>
+        <div class="fileline" data-file="word2pdf" hidden></div>
+        <div class="opts" data-needs="word2pdf">
+          <label class="f">紙張<select id="w2p-size"><option value="a4">A4</option><option value="letter">Letter</option></select></label>
+          <label class="f">方向<select id="w2p-orient"><option value="port">直向</option><option value="land">橫向</option></select></label>
+          <label class="f">邊界<select id="w2p-margin"><option value="10">窄（10 公釐）</option><option value="18" selected>標準（18 公釐）</option><option value="25">寬（25 公釐）</option></select></label>
+        </div>
+        <p class="hint" style="margin:10px 0 0">會保留文字、標題、清單、表格和圖片。頁首頁尾、文字方塊、分欄等進階排版不會保留。</p>
+        <button class="btn primary go" data-go="word2pdf" disabled>轉換成 PDF</button>
+        <div class="bar" data-needs="word2pdf"><button class="btn" type="button" id="w2p-print">改用瀏覽器列印（文字可以選取）</button><span class="hint">在列印視窗選「另存為 PDF」。</span></div>
+        <div class="pvgrid" id="pv-word2pdf" hidden></div>
+      </div>
+
+      <!-- xls2pdf -->
+      <div data-view="xls2pdf">
+        <div class="drop" data-drop="xls2pdf"></div>
+        <div class="fileline" data-file="xls2pdf" hidden></div>
+        <div class="opts" data-needs="xls2pdf">
+          <div class="f" id="x2p-sheets-f">要轉換的工作表<div id="x2p-sheets" style="display:flex;flex-direction:column;gap:6px"></div></div>
+          <label class="f">紙張<select id="x2p-size"><option value="a4">A4</option><option value="letter">Letter</option></select></label>
+          <label class="f">方向<select id="x2p-orient"><option value="auto">依內容自動</option><option value="port">直向</option><option value="land">橫向</option></select></label>
+          <label class="f">邊界<select id="x2p-margin"><option value="10">窄（10 公釐）</option><option value="18" selected>標準（18 公釐）</option><option value="25">寬（25 公釐）</option></select></label>
+          <label class="f check"><input type="checkbox" id="x2p-fit" checked> 縮小到一頁寬（欄位不換行）</label>
+          <label class="f check"><input type="checkbox" id="x2p-grid" checked> 顯示格線</label>
+        </div>
+        <p class="hint" style="margin:10px 0 0">會保留儲存格的文字、數字格式和合併儲存格。圖表、圖片、儲存格顏色和字型不會保留。</p>
+        <button class="btn primary go" data-go="xls2pdf" disabled>轉換成 PDF</button>
+        <div class="pvgrid" id="pv-xls2pdf" hidden></div>
+      </div>
+
+      <!-- ppt2pdf -->
+      <div data-view="ppt2pdf">
+        <div class="drop" data-drop="ppt2pdf"></div>
+        <div class="fileline" data-file="ppt2pdf" hidden></div>
+        <div class="opts" data-needs="ppt2pdf">
+          <label class="f">畫質<select id="p2p-q"><option value="1600">標準</option><option value="2400">高畫質（檔案較大）</option></select></label>
+          <label class="f check"><input type="checkbox" id="p2p-hidden"> 包含隱藏的投影片</label>
+        </div>
+        <p class="hint" style="margin:10px 0 0">會轉換文字、圖片、基本圖形、表格和背景。圖表、SmartArt、特殊效果和動畫無法轉換，字型也可能和原本不同。轉換後下方會顯示預覽，請檢查一下。</p>
+        <button class="btn primary go" data-go="ppt2pdf" disabled>轉換成 PDF</button>
+        <div class="pvgrid" id="pv-ppt2pdf" hidden></div>
+      </div>
+
+      <!-- html2pdf -->
+      <div data-view="html2pdf">
+        <div class="seg" style="margin-bottom:14px">
+          <label><input type="radio" name="h2p-src" value="file" checked><span>上傳 HTML 檔</span></label>
+          <label><input type="radio" name="h2p-src" value="paste"><span>貼上 HTML 程式碼</span></label>
+        </div>
+        <div id="h2p-file-area">
+          <div class="drop" data-drop="html2pdf"></div>
+          <div class="fileline" data-file="html2pdf" hidden></div>
+        </div>
+        <div id="h2p-paste-area" hidden>
+          <textarea class="out" id="h2p-code" spellcheck="false" placeholder="&lt;h1&gt;標題&lt;/h1&gt;&lt;p&gt;內容…&lt;/p&gt;" aria-label="HTML 程式碼" style="min-height:220px;margin-top:0"></textarea>
+        </div>
+        <div class="opts">
+          <label class="f">紙張<select id="h2p-size"><option value="a4">A4</option><option value="letter">Letter</option></select></label>
+          <label class="f">方向<select id="h2p-orient"><option value="port">直向</option><option value="land">橫向</option></select></label>
+          <label class="f">邊界<select id="h2p-margin"><option value="10">窄（10 公釐）</option><option value="18" selected>標準（18 公釐）</option><option value="25">寬（25 公釐）</option></select></label>
+          <label class="f">版面寬度<select id="h2p-width"><option value="0">配合紙張寬度</option><option value="1024">桌面版（1024 像素，縮小放入）</option><option value="1280">寬螢幕（1280 像素，縮小放入）</option></select></label>
+        </div>
+        <p class="hint" style="margin:10px 0 0">網頁裡的 JavaScript 不會執行。使用相對路徑的圖片和樣式檔無法載入，請改用完整網址或內嵌。無法直接輸入其他網站的網址來轉換。</p>
+        <button class="btn primary go" data-go="html2pdf" disabled>轉換成 PDF</button>
+        <div class="bar"><button class="btn" type="button" id="h2p-print" disabled>改用瀏覽器列印（文字可以選取）</button><span class="hint">在列印視窗選「另存為 PDF」。</span></div>
+        <div class="pvgrid" id="pv-html2pdf" hidden></div>
+      </div>
+
       <!-- summary -->
       <div data-view="summary">
         <div class="info warn" data-noai hidden>AI 功能需要在 Claude 裡開啟這個頁面才能使用。</div>
@@ -833,6 +907,10 @@ const IC = {
   pdf2ppt:'<rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M12 16v4M8 20h8M10 13V8h2.5a1.75 1.75 0 0 1 0 3.5H10"/>',
   edit:'<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
   form:'<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M8 8h8M8 12h4"/><rect x="8" y="15" width="8" height="3" rx=".5"/>',
+  word2pdf:'<path d="M6 3h9l4 4v14H6z"/><path d="M8.5 10l1.5 6 2-4.5 2 4.5 1.5-6"/>',
+  xls2pdf:'<path d="M6 3h9l4 4v14H6z"/><path d="M9 10l6 7M15 10l-6 7"/>',
+  ppt2pdf:'<path d="M6 3h9l4 4v14H6z"/><path d="M10 17v-7h2.5a2 2 0 0 1 0 4H10"/>',
+  html2pdf:'<path d="M8 8l-5 4 5 4M16 8l5 4-5 4M14 5l-4 14"/>',
   redact:'<path d="M6 3h9l4 4v14H6z"/><path d="M8.5 10h7v3h-7z" fill="currentColor"/><path d="M8.5 16.5h5"/>'
 };
 const TOOLS = [
@@ -850,6 +928,10 @@ const TOOLS = [
   { id:'pdf2word', cat:'轉換', name:'PDF 轉 Word', desc:'轉成可以編輯的 Word 文件', color:'#2B6CD8', kw:'docx word 文書' },
   { id:'pdf2ppt', cat:'轉換', name:'PDF 轉 PowerPoint', desc:'每一頁變成一張投影片', color:'#D2502E', kw:'pptx ppt 簡報 投影片' },
   { id:'pdf2md', cat:'轉換', name:'PDF 轉 Markdown', desc:'擷取文字，並保留標題與段落結構', color:'#4F63D9', kw:'文字 txt' },
+  { id:'word2pdf', cat:'Office 轉 PDF', name:'Word 轉 PDF', desc:'把 .docx 文件轉成 PDF', color:'#2B6CD8', kw:'docx doc word 文書' },
+  { id:'xls2pdf', cat:'Office 轉 PDF', name:'Excel 轉 PDF', desc:'把試算表或 CSV 轉成整齊的 PDF 表格', color:'#1E8A4C', kw:'xlsx xls csv 試算表 表格 ods' },
+  { id:'ppt2pdf', cat:'Office 轉 PDF', name:'PPT 轉 PDF', desc:'把 PowerPoint 簡報轉成 PDF', color:'#D2502E', kw:'pptx powerpoint 簡報 投影片' },
+  { id:'html2pdf', cat:'Office 轉 PDF', name:'HTML 轉 PDF', desc:'上傳網頁檔或貼上程式碼，轉成 PDF', color:'#E9A800', kw:'網頁 html htm' },
   { id:'edit', cat:'編輯', name:'編輯 PDF', desc:'加入文字、圖片、方框、螢光筆和手寫', color:'#A6478A', kw:'註解 打字 標示' },
   { id:'form', cat:'編輯', name:'PDF 表單', desc:'直接在 PDF 表單的欄位裡填寫資料', color:'#A6478A', kw:'填寫 申請表' },
   { id:'pagenum', cat:'編輯', name:'添加頁碼', desc:'選好位置和格式，自動幫每頁編號', color:'#A6478A' },
@@ -899,6 +981,10 @@ $('#back').addEventListener('click', () => { current = null; $('#tool').hidden =
 /* ================= drop zones ================= */
 const DROP = {
   merge: { accept: f => isPdf(f) || isImg(f), multi: true, camera: true, title: '把 PDF 或照片拖到這裡', sub: '至少需要 2 個檔案，可混合 PDF 與照片', pick: '選擇檔案', types: 'application/pdf,.pdf,image/*' },
+  word2pdf: { doc: true, accept: f => /\.(docx|doc|dotx)$/i.test(f.name), title: '把 Word 檔拖到這裡', sub: '支援 .docx（舊版 .doc 請先另存成 .docx）', pick: '選擇 Word 檔', types: '.docx,.doc,.dotx,application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+  xls2pdf: { doc: true, accept: f => /\.(xlsx|xlsm|xls|ods|csv)$/i.test(f.name), title: '把 Excel 檔拖到這裡', sub: '支援 .xlsx、.xls、.ods、.csv', pick: '選擇 Excel 檔', types: '.xlsx,.xlsm,.xls,.ods,.csv' },
+  ppt2pdf: { doc: true, accept: f => /\.(pptx|ppt|ppsx)$/i.test(f.name), title: '把 PowerPoint 檔拖到這裡', sub: '支援 .pptx（舊版 .ppt 請先另存成 .pptx）', pick: '選擇簡報檔', types: '.pptx,.ppt,.ppsx' },
+  html2pdf: { doc: true, accept: f => /\.(html?|xhtml)$/i.test(f.name), title: '把 HTML 檔拖到這裡', sub: '支援 .html、.htm', pick: '選擇 HTML 檔', types: '.html,.htm,.xhtml,text/html' },
   scan: { accept: isImg, multi: true, camera: true, title: '拍下或上傳文件照片', sub: '拍照時讓文件佔滿畫面、光線均勻，效果最好', pick: '選擇照片', types: 'image/*' },
   img2pdf: { accept: isImg, multi: true, camera: true, title: '把照片拖到這裡', sub: '支援 JPG、PNG、WebP、GIF、BMP（HEIC 需用 Safari），可一次選多張', pick: '選擇照片', types: 'image/*' }
 };
@@ -915,7 +1001,7 @@ $$('[data-drop]').forEach(z => {
     const ok = fs.filter(cfg.accept);
     if (fs.length > ok.length) toast((fs.length - ok.length) + ' 個檔案格式不支援，已略過');
     if (!ok.length) return;
-    if (cfg.multi) addToBin(id, ok); else openSingle(id, ok[0]);
+    if (cfg.multi) addToBin(id, ok); else if (cfg.doc) openDocFile(id, ok[0]); else openSingle(id, ok[0]);
   };
   $$('input', z).forEach(inp => inp.addEventListener('change', e => { const fs = Array.from(e.target.files); e.target.value = ''; handle(fs); }));
   z.addEventListener('dragover', e => { if (!e.dataTransfer.types.includes('Files')) return; e.preventDefault(); z.classList.add('over'); });
@@ -1043,6 +1129,8 @@ function refresh(){
     redact: !!S.redact && RD.boxes.length > 0,
     ocr: !!S.ocr && !ocrBusy,
     pdf2word: !!S.pdf2word && !ocrBusy,
+    xls2pdf: !!S.xls2pdf && XL.sheets.some(s => s.on),
+    html2pdf: $('input[name=h2p-src]:checked').value === 'paste' ? !!$('#h2p-code').value.trim() : !!S.html2pdf,
     organize: !!S.organize && BINS.organize.items.length > 0,
     sign: !!S.sign && !!sigCanvas,
     summary: !!S.summary && !aiBusy,
@@ -1057,6 +1145,7 @@ function refresh(){
   const bm = $('[data-go="merge"]'), bi = $('[data-go="img2pdf"]');
   if (!bm.querySelector('.spin')) bm.textContent = nm ? `合併 ${nm} 個檔案` : '合併 PDF';
   if (!bi.querySelector('.spin')) bi.textContent = ni ? `把 ${ni} 張照片轉換成 PDF` : '轉換成 PDF';
+  const hp = $('#h2p-print'); if (hp) hp.disabled = !($('input[name=h2p-src]:checked').value === 'paste' ? !!$('#h2p-code').value.trim() : !!S.html2pdf);
   const bs = $('[data-go="scan"]'), ns = BINS.scan.items.length;
   if (!bs.querySelector('.spin')) bs.textContent = ns ? `把 ${ns} 張文件照片產生 PDF` : '產生 PDF';
 }
@@ -2303,6 +2392,653 @@ go('redact', '處理中…', async btn => {
   if (!$('#rd-meta').checked) { try { out.setTitle(src.getTitle() || ''); out.setAuthor(src.getAuthor() || ''); out.setSubject(src.getSubject() || ''); } catch {} }
   else { out.setProducer(''); out.setCreator(''); }
   await savePdf(await out.save(), baseName(st.file.name) + '-已遮蔽.pdf');
+});
+
+/* ================= PowerPoint renderer (.pptx → canvas) ================= */
+const PPT = (() => {
+  const EMU_PT = 12700;
+  const kids = (el, n) => el ? [...el.children].filter(c => c.localName === n) : [];
+  const kid = (el, n) => el ? [...el.children].find(c => c.localName === n) || null : null;
+  const pth = (el, ...ns) => ns.reduce((e, n) => kid(e, n), el);
+  const num = (v, d = 0) => v == null || v === '' ? d : +v;
+  const xml = t => new DOMParser().parseFromString(t, 'application/xml');
+  const dirOf = p => p.slice(0, p.lastIndexOf('/') + 1);
+  function resolve(base, target){
+    if (target.startsWith('/')) return target.slice(1);
+    const parts = (dirOf(base) + target).split('/'), out = [];
+    for (const s of parts) { if (s === '..') out.pop(); else if (s !== '.' && s !== '') out.push(s); }
+    return out.join('/');
+  }
+  const FONT_STACK = '"Microsoft JhengHei","PingFang TC","Noto Sans CJK TC","Heiti TC","Segoe UI",Arial,sans-serif';
+  const PRST = { black:[0,0,0], white:[255,255,255], red:[255,0,0], green:[0,128,0], blue:[0,0,255], yellow:[255,255,0], gray:[128,128,128], grey:[128,128,128], orange:[255,165,0], darkGray:[169,169,169], lightGray:[211,211,211] };
+
+  function rgb2hsl(r, g, b){ r/=255; g/=255; b/=255; const mx=Math.max(r,g,b), mn=Math.min(r,g,b); let h=0, s=0; const l=(mx+mn)/2;
+    if (mx!==mn){ const d=mx-mn; s=l>.5?d/(2-mx-mn):d/(mx+mn); h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4; h/=6; } return [h,s,l]; }
+  function hsl2rgb(h, s, l){ if(!s) return [l*255,l*255,l*255]; const q=l<.5?l*(1+s):l+s-l*s, p=2*l-q;
+    const f=t=>{ if(t<0)t+=1; if(t>1)t-=1; return t<1/6?p+(q-p)*6*t:t<1/2?q:t<2/3?p+(q-p)*(2/3-t)*6:p; }; return [f(h+1/3)*255,f(h)*255,f(h-1/3)*255]; }
+
+  async function open(buf){
+    const zip = await JSZip.loadAsync(buf);
+    const read = async p => { const f = zip.file(p); return f ? f.async('string') : null; };
+    const relsCache = {};
+    async function rels(part){
+      if (relsCache[part]) return relsCache[part];
+      const t = await read(dirOf(part) + '_rels/' + part.slice(part.lastIndexOf('/') + 1) + '.rels'), m = {};
+      if (t) for (const r of xml(t).documentElement.children) m[r.getAttribute('Id')] = { target: r.getAttribute('TargetMode') === 'External' ? null : resolve(part, r.getAttribute('Target')), type: (r.getAttribute('Type') || '').split('/').pop() };
+      return relsCache[part] = m;
+    }
+    const pres = xml(await read('ppt/presentation.xml')).documentElement;
+    const sz = kid(pres, 'sldSz'), cx = num(sz?.getAttribute('cx'), 9144000), cy = num(sz?.getAttribute('cy'), 6858000);
+    const prels = await rels('ppt/presentation.xml');
+    const slidePaths = kids(kid(pres, 'sldIdLst'), 'sldId').map(s => prels[s.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id') || s.getAttribute('r:id')]?.target).filter(Boolean);
+    const docCache = {}, imgCache = {};
+    const doc = async p => docCache[p] || (docCache[p] = (async () => { const t = await read(p); return t ? xml(t).documentElement : null; })());
+    async function image(p){
+      if (imgCache[p] !== undefined) return imgCache[p];
+      const f = zip.file(p); if (!f || /\.(emf|wmf|tiff?|svg)$/i.test(p)) return imgCache[p] = null;
+      const blob = await f.async('blob'), url = URL.createObjectURL(blob.type ? blob : new Blob([blob], { type: /\.png$/i.test(p) ? 'image/png' : 'image/jpeg' }));
+      try { return imgCache[p] = await decodeImg(url); } catch { return imgCache[p] = null; }
+    }
+    return { cx, cy, slidePaths, doc, rels, image, count: slidePaths.length };
+  }
+
+  async function context(P, slidePath){
+    const sld = await P.doc(slidePath), srels = await P.rels(slidePath);
+    const layoutPath = Object.values(srels).find(r => r.type === 'slideLayout')?.target;
+    const layout = layoutPath ? await P.doc(layoutPath) : null, lrels = layoutPath ? await P.rels(layoutPath) : {};
+    const masterPath = Object.values(lrels).find(r => r.type === 'slideMaster')?.target;
+    const master = masterPath ? await P.doc(masterPath) : null, mrels = masterPath ? await P.rels(masterPath) : {};
+    const themePath = Object.values(mrels).find(r => r.type === 'theme')?.target;
+    const theme = themePath ? await P.doc(themePath) : null;
+    const scheme = {};
+    const cs = theme && theme.getElementsByTagNameNS('*', 'clrScheme')[0];
+    if (cs) for (const c of cs.children) { const v = c.children[0]; if (!v) continue; const hex = v.localName === 'sysClr' ? (v.getAttribute('lastClr') || '000000') : v.getAttribute('val'); scheme[c.localName] = hex; }
+    const clrMap = {}; const cm = kid(master, 'clrMap');
+    if (cm) for (const a of cm.attributes) clrMap[a.name] = a.value;
+    const ovr = pth(sld, 'clrMapOvr', 'overrideClrMapping'); if (ovr) for (const a of ovr.attributes) clrMap[a.name] = a.value;
+    return { P, sld, srels, layout, lrels, master, mrels, scheme, clrMap, layoutPath, masterPath, slidePath };
+  }
+
+  function color(C, el){
+    if (!el) return null;
+    const c = [...el.children].find(x => /^(srgbClr|schemeClr|sysClr|prstClr|scrgbClr|hslClr)$/.test(x.localName)); if (!c) return null;
+    let r = 0, g = 0, b = 0, a = 1;
+    const hex = h => { h = (h || '000000').padStart(6, '0'); return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)]; };
+    if (c.localName === 'srgbClr') [r, g, b] = hex(c.getAttribute('val'));
+    else if (c.localName === 'sysClr') [r, g, b] = hex(c.getAttribute('lastClr') || (c.getAttribute('val') === 'window' ? 'FFFFFF' : '000000'));
+    else if (c.localName === 'prstClr') [r, g, b] = PRST[c.getAttribute('val')] || [0, 0, 0];
+    else if (c.localName === 'scrgbClr') [r, g, b] = ['r', 'g', 'b'].map(k => num(c.getAttribute(k)) / 100000 * 255);
+    else if (c.localName === 'schemeClr') {
+      let v = c.getAttribute('val'); if (v === 'phClr') v = C.phClr || 'tx1';
+      const map = { tx1: 'dk1', bg1: 'lt1', tx2: 'dk2', bg2: 'lt2' };
+      const key = C.clrMap[v] || map[v] || v; [r, g, b] = hex(C.scheme[key] || C.scheme[map[key]] || '000000');
+    }
+    for (const m of c.children) {
+      const v = num(m.getAttribute('val')) / 100000;
+      if (m.localName === 'alpha') a = v;
+      else if (m.localName === 'lumMod' || m.localName === 'lumOff') { const [h, s, l] = rgb2hsl(r, g, b); [r, g, b] = hsl2rgb(h, s, Math.min(1, Math.max(0, m.localName === 'lumMod' ? l * v : l + v))); }
+      else if (m.localName === 'tint') { r = 255 - (255 - r) * v; g = 255 - (255 - g) * v; b = 255 - (255 - b) * v; }
+      else if (m.localName === 'shade') { r *= v; g *= v; b *= v; }
+      else if (m.localName === 'satMod') { const [h, s, l] = rgb2hsl(r, g, b); [r, g, b] = hsl2rgb(h, Math.min(1, s * v), l); }
+    }
+    return `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a})`;
+  }
+  function schemeRgba(C, v){
+    const map = { tx1: 'dk1', bg1: 'lt1', tx2: 'dk2', bg2: 'lt2' }, key = C.clrMap[v] || map[v] || v, h = (C.scheme[key] || '000000').padStart(6, '0');
+    return `rgba(${parseInt(h.slice(0, 2), 16)},${parseInt(h.slice(2, 4), 16)},${parseInt(h.slice(4, 6), 16)},1)`;
+  }
+  // returns {type:'color',c} | {type:'image',img,src} | {type:'none'} | null
+  async function fillOf(C, spPr, styleEl, rels, partPath){
+    if (spPr) {
+      if (kid(spPr, 'noFill')) return { type: 'none' };
+      const sf = kid(spPr, 'solidFill'); if (sf) return { type: 'color', c: color(C, sf) };
+      const gf = kid(spPr, 'gradFill');
+      if (gf) { const stops = kids(kid(gf, 'gsLst'), 'gs').map(g => ({ pos: num(g.getAttribute('pos')) / 100000, c: color(C, g) })).filter(s => s.c); if (stops.length) return { type: 'grad', stops, ang: num(pth(gf, 'lin')?.getAttribute('ang'), 5400000) / 60000 }; }
+      const bf = kid(spPr, 'blipFill'); if (bf) return await blipOf(C, bf, rels);
+    }
+    const fr = kid(styleEl, 'fillRef'); if (fr && num(fr.getAttribute('idx')) > 0) { const c = color(C, fr); if (c) return { type: 'color', c }; }
+    return null;
+  }
+  async function blipOf(C, bf, rels){
+    const blip = kid(bf, 'blip'); const id = blip && (blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed') || blip.getAttribute('r:embed'));
+    const t = id && rels[id]?.target; if (!t) return null;
+    const img = await C.P.image(t); if (!img) return null;
+    const sr = kid(bf, 'srcRect'), crop = sr ? ['l', 't', 'r', 'b'].map(k => num(sr.getAttribute(k)) / 100000) : [0, 0, 0, 0];
+    let alpha = 1; const am = blip && kid(blip, 'alphaModFix'); if (am) alpha = num(am.getAttribute('amt'), 100000) / 100000;
+    return { type: 'image', img, crop, alpha };
+  }
+  function paintFill(ctx, f, x, y, w, h, pathFn){
+    if (!f || f.type === 'none') return;
+    ctx.save(); pathFn(); ctx.clip();
+    if (f.type === 'color') { ctx.fillStyle = f.c; ctx.fillRect(x, y, w, h); }
+    else if (f.type === 'grad') {
+      const a = f.ang * Math.PI / 180, cx = x + w / 2, cy = y + h / 2, L = Math.abs(w * Math.cos(a)) / 2 + Math.abs(h * Math.sin(a)) / 2;
+      const g = ctx.createLinearGradient(cx - Math.cos(a) * L, cy - Math.sin(a) * L, cx + Math.cos(a) * L, cy + Math.sin(a) * L);
+      f.stops.sort((p, q) => p.pos - q.pos).forEach(s => g.addColorStop(Math.min(1, Math.max(0, s.pos)), s.c)); ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+    } else if (f.type === 'image') {
+      const iw = f.img.naturalWidth, ih = f.img.naturalHeight, [l, t, r, b] = f.crop;
+      ctx.globalAlpha = f.alpha; ctx.drawImage(f.img, iw * l, ih * t, Math.max(1, iw * (1 - l - r)), Math.max(1, ih * (1 - t - b)), x, y, w, h);
+    }
+    ctx.restore();
+  }
+
+  // ---- placeholders & inheritance ----
+  const phOf = sp => pth(sp, 'nvSpPr', 'nvPr', 'ph') || pth(sp, 'nvPicPr', 'nvPr', 'ph') || pth(sp, 'nvGraphicFramePr', 'nvPr', 'ph');
+  const phType = ph => ph ? (ph.getAttribute('type') || 'obj') : null;
+  function findPh(tree, ph){
+    if (!tree || !ph) return null;
+    const all = [...tree.getElementsByTagNameNS('*', 'sp')], type = phType(ph), idx = ph.getAttribute('idx');
+    const norm = t => (t === 'ctrTitle' ? 'title' : t === 'subTitle' || t === 'obj' ? 'body' : t);
+    let m = idx != null ? all.find(s => { const p = phOf(s); return p && p.getAttribute('idx') === idx; }) : null;
+    if (!m) m = all.find(s => { const p = phOf(s); return p && phType(p) === type; });
+    if (!m) m = all.find(s => { const p = phOf(s); return p && norm(phType(p)) === norm(type); });
+    return m || null;
+  }
+  function chainFor(C, sp, level){
+    const ph = phOf(sp); if (!ph || level === 'master') return [sp];
+    if (level === 'slide') { const l = findPh(C.layout, ph), m = findPh(C.master, ph) ; return [sp, l, m].filter(Boolean); }
+    if (level === 'layout') { const m = findPh(C.master, ph); return [sp, m].filter(Boolean); }
+    return [sp];
+  }
+  function xfrmOf(chain){
+    for (const s of chain) { const x = pth(s, 'spPr', 'xfrm') || pth(s, 'xfrm'); if (x && kid(x, 'off')) return x; }
+    return null;
+  }
+
+  // ---- text ----
+  function txStyleFor(C, sp){
+    const t = phType(phOf(sp)), ts = kid(C.master, 'txStyles');
+    if (!ts) return null;
+    if (t === 'title' || t === 'ctrTitle') return kid(ts, 'titleStyle');
+    if (t) return kid(ts, ['dt', 'ftr', 'sldNum', 'hdr'].includes(t) ? 'otherStyle' : 'bodyStyle');
+    return kid(ts, 'otherStyle');
+  }
+  function bodyPrAttr(chain, name, d){
+    for (const s of chain) { const b = pth(s, 'txBody', 'bodyPr'); if (b && b.hasAttribute(name)) return b.getAttribute(name); }
+    return d;
+  }
+  function autofit(chain){
+    for (const s of chain) { const b = pth(s, 'txBody', 'bodyPr'); if (!b) continue; const n = kid(b, 'normAutofit'); if (n) return { on: true, scale: num(n.getAttribute('fontScale'), 100000) / 100000, red: num(n.getAttribute('lnSpcReduction')) / 100000 }; if (kid(b, 'noAutofit') || kid(b, 'spAutoFit')) return { on: false, scale: 1, red: 0 }; }
+    return { on: false, scale: 1, red: 0 };
+  }
+
+  function drawText(C, ctx, sp, chain, box, k, opts = {}){
+    const txBody = kid(sp, 'txBody'); if (!txBody) return;
+    const paras = kids(txBody, 'p'); if (!paras.length) return;
+    const style = opts.tableCell ? null : txStyleFor(C, sp), isTitle = /title/i.test(phType(phOf(sp)) || '');
+    const lists = [...chain.map(s => pth(s, 'txBody', 'lstStyle')), opts.tableCell ? null : style].filter(Boolean);
+    const lvlEls = lvl => lists.map(l => kid(l, `lvl${lvl + 1}pPr`)).filter(Boolean);
+    const ins = n => num(bodyPrAttr(chain, n, n === 'lIns' || n === 'rIns' ? 91440 : 45720)) * k;
+    const wrap = bodyPrAttr(chain, 'wrap', 'square') !== 'none';
+    const anchor = bodyPrAttr(chain, 'anchor', 't');
+    const vert = bodyPrAttr(chain, 'vert', 'horz');
+    if (vert !== 'horz' && !opts.tableCell) { /* vertical text not supported: render horizontally */ }
+    const af = autofit(chain);
+    const bx = box.x + ins('lIns'), by = box.y + ins('tIns'), bw = Math.max(1, box.w - ins('lIns') - ins('rIns')), bh = Math.max(1, box.h - ins('tIns') - ins('bIns'));
+
+    const layoutAll = scale => {
+      const lines = []; let y = 0, autoNums = {};
+      for (const p of paras) {
+        const pPr = kid(p, 'pPr'), lvl = num(pPr?.getAttribute('lvl')), L = lvlEls(lvl);
+        const pa = (name, d) => { if (pPr && pPr.hasAttribute(name)) return pPr.getAttribute(name); for (const e of L) if (e.hasAttribute(name)) return e.getAttribute(name); return d; };
+        const pk = name => { const own = pPr && kid(pPr, name); if (own) return own; for (const e of L) { const x = kid(e, name); if (x) return x; } return null; };
+        const defR = [pPr && kid(pPr, 'defRPr'), ...L.map(e => kid(e, 'defRPr'))].filter(Boolean);
+        const ra = (rPr, name, d) => { if (rPr && rPr.hasAttribute(name)) return rPr.getAttribute(name); for (const e of defR) if (e.hasAttribute(name)) return e.getAttribute(name); return d; };
+        const rc = rPr => { const own = rPr && kid(rPr, 'solidFill'); if (own) return color(C, own); for (const e of defR) { const f = kid(e, 'solidFill'); if (f) return color(C, f); } return opts.defColor || schemeRgba(C, 'tx1'); };
+        const algn = pa('algn', 'l'), marL = num(pa('marL', 0)) * k, indent = num(pa('indent', 0)) * k;
+        const lnPct = (() => { const l = pk('lnSpc'); const pct = l && kid(l, 'spcPct'); return pct ? num(pct.getAttribute('val'), 100000) / 100000 : 1; })() * (1 - af.red);
+        const spc = n => { const s = pk(n); if (!s) return 0; const pt = kid(s, 'spcPts'); if (pt) return num(pt.getAttribute('val')) / 100 * k * EMU_PT; const pc = kid(s, 'spcPct'); return pc ? num(pc.getAttribute('val')) / 100000 * 18 * k * EMU_PT : 0; };
+        // runs
+        const runs = []; let firstSz = null;
+        for (const r of p.children) {
+          if (r.localName === 'r' || r.localName === 'fld') {
+            const rPr = kid(r, 'rPr'), text = kid(r, 't')?.textContent || '';
+            const sz = num(ra(rPr, 'sz', opts.defSz || (isTitle ? 4400 : 1800))) / 100 * scale;
+            if (firstSz == null) firstSz = sz;
+            runs.push({ text, sz, b: ra(rPr, 'b', '0') === '1', i: ra(rPr, 'i', '0') === '1', u: (ra(rPr, 'u', 'none') !== 'none'), color: rc(rPr), base: num(ra(rPr, 'baseline', 0)) });
+          } else if (r.localName === 'br') runs.push({ br: true });
+        }
+        const endSz = num(ra(kid(p, 'endParaRPr'), 'sz', opts.defSz || (isTitle ? 4400 : 1800))) / 100 * scale;
+        const baseSz = firstSz || endSz;
+        // bullet
+        let bullet = null;
+        const hasText = runs.some(r => r.text && r.text.trim());
+        if (hasText && !pk('buNone')) {
+          const bc = pk('buChar'), an = pk('buAutoNum');
+          if (bc) bullet = bc.getAttribute('char');
+          else if (an) { const key = lvl; autoNums[key] = (autoNums[key] || num(an.getAttribute('startAt'), 1) - 1) + 1; const t = an.getAttribute('type') || ''; bullet = /alpha/i.test(t) ? String.fromCharCode((/UcP|Uc/.test(t) ? 65 : 97) + autoNums[key] - 1) + '.' : autoNums[key] + '.'; }
+          if (bullet) { const bcl = pk('buClr'); bullet = { ch: bullet, color: bcl ? color(C, bcl) : null }; }
+        }
+        // tokenize & wrap
+        y += lines.length ? spc('spcBef') * scale : 0;
+        let startX = marL + indent; const contX = marL;
+        if (bullet) { bullet.x = marL + indent; ctx.font = `400 ${baseSz * k * EMU_PT}px ${FONT_STACK}`; const bwid = ctx.measureText((bullet.ch || '•') + ' ').width; startX = indent < 0 ? Math.max(marL, bullet.x + bwid) : bullet.x + bwid; }
+        let line = { items: [], w: 0, h: baseSz, x0: startX, algn }; const outLines = [line];
+        const maxW = x0 => wrap ? Math.max(4, bw - x0) : Infinity;
+        for (const r of runs) {
+          if (r.br) { line = { items: [], w: 0, h: r.sz || baseSz, x0: contX, algn }; outLines.push(line); continue; }
+          ctx.font = `${r.i ? 'italic ' : ''}${r.b ? 700 : 400} ${r.sz * k * EMU_PT}px ${FONT_STACK}`;
+          const toks = r.text.match(/[\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef\u3000-\u303f]|[^\s\u2e80-\u9fff\uac00-\ud7af\uf900-\ufaff\uff00-\uffef\u3000-\u303f]+|\s+/g) || [];
+          for (const t of toks) {
+            const tw = ctx.measureText(t).width;
+            if (line.w + tw > maxW(line.x0) && line.items.length && !/^\s+$/.test(t)) { line = { items: [], w: 0, h: r.sz, x0: contX, algn }; outLines.push(line); }
+            if (!line.items.length && /^\s+$/.test(t) && outLines.length > 1) continue;
+            if (tw > maxW(line.x0) && t.length > 1) { // very long word: break by chars
+              for (const ch of t) { const cw = ctx.measureText(ch).width; if (line.w + cw > maxW(line.x0) && line.items.length) { line = { items: [], w: 0, h: r.sz, x0: contX, algn }; outLines.push(line); } line.items.push({ t: ch, w: cw, r }); line.w += cw; line.h = Math.max(line.h, r.sz); }
+              continue;
+            }
+            line.items.push({ t, w: tw, r }); line.w += tw; line.h = Math.max(line.h, r.sz);
+          }
+        }
+        outLines.forEach((ln, i) => { ln.lh = ln.h * k * EMU_PT * 1.2 * lnPct; ln.y = y; y += ln.lh; if (i === 0 && bullet) ln.bullet = { ...bullet, sz: baseSz }; lines.push(ln); });
+        y += spc('spcAft') * scale;
+      }
+      return { lines, h: y };
+    };
+    let scale = af.scale, L = layoutAll(scale);
+    if (af.on) { let n = 0; while (L.h > bh * 1.02 && n++ < 8 && scale > .35) { scale *= .9; L = layoutAll(scale); } }
+    if (opts.measure) return L.h + ins('tIns') + ins('bIns');
+    const oy = anchor === 'ctr' ? by + (bh - L.h) / 2 : anchor === 'b' ? by + bh - L.h : by;
+    ctx.save();
+    if (opts.clip) { ctx.beginPath(); ctx.rect(box.x, box.y, box.w, box.h); ctx.clip(); }
+    ctx.textBaseline = 'alphabetic';
+    for (const ln of L.lines) {
+      const trim = ln.items.length && /^\s+$/.test(ln.items[ln.items.length - 1].t) ? ln.items[ln.items.length - 1].w : 0;
+      const lw = ln.w - trim, avail = bw - ln.x0;
+      let x = bx + ln.x0 + (ln.algn === 'ctr' ? (avail - lw) / 2 : ln.algn === 'r' ? avail - lw : 0);
+      const base = oy + ln.y + ln.lh * 0.8;
+      if (ln.bullet) {
+        const bpx = ln.bullet.sz * k * EMU_PT; ctx.font = `400 ${bpx}px ${FONT_STACK}`; ctx.fillStyle = ln.bullet.color || (ln.items[0]?.r.color) || '#000';
+        const ch = ln.bullet.ch === '' || ln.bullet.ch === '§' ? '•' : ln.bullet.ch;
+        ctx.fillText(ch, bx + Math.max(0, ln.bullet.x), base);
+      }
+      for (const it of ln.items) {
+        const r = it.r, px = r.sz * k * EMU_PT;
+        ctx.font = `${r.i ? 'italic ' : ''}${r.b ? 700 : 400} ${px}px ${FONT_STACK}`; ctx.fillStyle = r.color || '#000';
+        const yy = base - (r.base ? r.base / 100000 * px : 0);
+        ctx.fillText(it.t, x, yy);
+        if (r.u) ctx.fillRect(x, yy + px * 0.1, it.w, Math.max(1, px / 18));
+        x += it.w;
+      }
+    }
+    ctx.restore();
+  }
+
+  // ---- geometry ----
+  function geomPath(ctx, sp, x, y, w, h){
+    const g = pth(sp, 'spPr', 'prstGeom'), prst = g ? g.getAttribute('prst') : null, cg = pth(sp, 'spPr', 'custGeom');
+    return () => {
+      ctx.beginPath();
+      if (cg) {
+        for (const p of kids(kid(cg, 'pathLst'), 'path')) {
+          const pw = num(p.getAttribute('w'), 1) || 1, ph = num(p.getAttribute('h'), 1) || 1, X = v => x + num(v) / pw * w, Y = v => y + num(v) / ph * h;
+          for (const c of p.children) {
+            const pts = kids(c, 'pt');
+            if (c.localName === 'moveTo') ctx.moveTo(X(pts[0].getAttribute('x')), Y(pts[0].getAttribute('y')));
+            else if (c.localName === 'lnTo') ctx.lineTo(X(pts[0].getAttribute('x')), Y(pts[0].getAttribute('y')));
+            else if (c.localName === 'cubicBezTo') ctx.bezierCurveTo(X(pts[0].getAttribute('x')), Y(pts[0].getAttribute('y')), X(pts[1].getAttribute('x')), Y(pts[1].getAttribute('y')), X(pts[2].getAttribute('x')), Y(pts[2].getAttribute('y')));
+            else if (c.localName === 'quadBezTo') ctx.quadraticCurveTo(X(pts[0].getAttribute('x')), Y(pts[0].getAttribute('y')), X(pts[1].getAttribute('x')), Y(pts[1].getAttribute('y')));
+            else if (c.localName === 'close') ctx.closePath();
+          }
+        }
+        return;
+      }
+      const r = Math.min(w, h);
+      switch (prst) {
+        case 'ellipse': case 'flowChartConnector': ctx.ellipse(x + w / 2, y + h / 2, Math.abs(w / 2), Math.abs(h / 2), 0, 0, Math.PI * 2); break;
+        case 'roundRect': case 'flowChartAlternateProcess': { const rr = r * 0.16667; if (ctx.roundRect) ctx.roundRect(x, y, w, h, rr); else ctx.rect(x, y, w, h); break; }
+        case 'triangle': case 'flowChartExtract': ctx.moveTo(x + w / 2, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); break;
+        case 'rtTriangle': ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x, y + h); ctx.closePath(); break;
+        case 'diamond': case 'flowChartDecision': ctx.moveTo(x + w / 2, y); ctx.lineTo(x + w, y + h / 2); ctx.lineTo(x + w / 2, y + h); ctx.lineTo(x, y + h / 2); ctx.closePath(); break;
+        case 'parallelogram': ctx.moveTo(x + w * .25, y); ctx.lineTo(x + w, y); ctx.lineTo(x + w * .75, y + h); ctx.lineTo(x, y + h); ctx.closePath(); break;
+        case 'homePlate': ctx.moveTo(x, y); ctx.lineTo(x + w - h / 2, y); ctx.lineTo(x + w, y + h / 2); ctx.lineTo(x + w - h / 2, y + h); ctx.lineTo(x, y + h); ctx.closePath(); break;
+        case 'chevron': ctx.moveTo(x, y); ctx.lineTo(x + w - h / 2, y); ctx.lineTo(x + w, y + h / 2); ctx.lineTo(x + w - h / 2, y + h); ctx.lineTo(x, y + h); ctx.lineTo(x + h / 2, y + h / 2); ctx.closePath(); break;
+        case 'rightArrow': ctx.moveTo(x, y + h * .25); ctx.lineTo(x + w - h / 2, y + h * .25); ctx.lineTo(x + w - h / 2, y); ctx.lineTo(x + w, y + h / 2); ctx.lineTo(x + w - h / 2, y + h); ctx.lineTo(x + w - h / 2, y + h * .75); ctx.lineTo(x, y + h * .75); ctx.closePath(); break;
+        case 'leftArrow': ctx.moveTo(x + w, y + h * .25); ctx.lineTo(x + h / 2, y + h * .25); ctx.lineTo(x + h / 2, y); ctx.lineTo(x, y + h / 2); ctx.lineTo(x + h / 2, y + h); ctx.lineTo(x + h / 2, y + h * .75); ctx.lineTo(x + w, y + h * .75); ctx.closePath(); break;
+        case 'line': case 'straightConnector1': case 'bentConnector2': case 'bentConnector3': case 'curvedConnector3': ctx.moveTo(x, y); ctx.lineTo(x + w, y + h); break;
+        default: ctx.rect(x, y, w, h);
+      }
+    };
+  }
+  const isLine = sp => /^(line|straightConnector1|bentConnector\d|curvedConnector\d)$/.test(pth(sp, 'spPr', 'prstGeom')?.getAttribute('prst') || '');
+
+  // ---- shape tree ----
+  async function drawTree(C, ctx, tree, k, level, rels, grp){
+    if (!tree) return;
+    for (let el of tree.children) {
+      if (el.localName === 'AlternateContent') { el = kid(el, 'Fallback')?.children[0] || kid(el, 'Choice')?.children[0]; if (!el) continue; }
+      const ln = el.localName;
+      if (!['sp', 'pic', 'grpSp', 'graphicFrame', 'cxnSp'].includes(ln)) continue;
+      const ph = phOf(el);
+      if (level !== 'slide' && ph) continue; // placeholders on layout/master are prompts only
+      try {
+        if (ln === 'grpSp') {
+          const x = pth(el, 'grpSpPr', 'xfrm'); if (!x) continue;
+          const off = kid(x, 'off'), ext = kid(x, 'ext'), chOff = kid(x, 'chOff'), chExt = kid(x, 'chExt');
+          const ox = num(off?.getAttribute('x')), oy = num(off?.getAttribute('y')), ex = num(ext?.getAttribute('cx')), ey = num(ext?.getAttribute('cy'));
+          const cox = num(chOff?.getAttribute('x')), coy = num(chOff?.getAttribute('y')), cex = num(chExt?.getAttribute('cx'), ex) || 1, cey = num(chExt?.getAttribute('cy'), ey) || 1;
+          const parent = grp || (v => v);
+          const map = b => parent({ x: ox + (b.x - cox) * ex / cex, y: oy + (b.y - coy) * ey / cey, w: b.w * ex / cex, h: b.h * ey / cey });
+          await drawTree(C, ctx, el, k, level, rels, map); continue;
+        }
+        const chain = level === 'slide' ? chainFor(C, el, 'slide') : [el];
+        const xf = xfrmOf(chain);
+        if (!xf) continue;
+        const off = kid(xf, 'off'), ext = kid(xf, 'ext');
+        let b = { x: num(off.getAttribute('x')), y: num(off.getAttribute('y')), w: num(ext?.getAttribute('cx')), h: num(ext?.getAttribute('cy')) };
+        if (grp) b = grp(b);
+        const box = { x: b.x * k, y: b.y * k, w: b.w * k, h: b.h * k };
+        const rot = num(xf.getAttribute('rot')) / 60000, fH = xf.getAttribute('flipH') === '1', fV = xf.getAttribute('flipV') === '1';
+        ctx.save();
+        if (rot || fH || fV) { const cx = box.x + box.w / 2, cy = box.y + box.h / 2; ctx.translate(cx, cy); ctx.rotate(rot * Math.PI / 180); ctx.scale(fH ? -1 : 1, fV ? -1 : 1); ctx.translate(-cx, -cy); }
+        if (ln === 'pic') {
+          const f = await blipOf(C, kid(el, 'blipFill'), rels);
+          if (f) paintFill(ctx, f, box.x, box.y, box.w, box.h, geomPath(ctx, el, box.x, box.y, box.w, box.h));
+        } else if (ln === 'graphicFrame') {
+          const gd = pth(el, 'graphic', 'graphicData'), tbl = gd && kid(gd, 'tbl');
+          if (tbl) await drawTable(C, ctx, tbl, box, k);
+          else { ctx.fillStyle = 'rgba(0,0,0,.04)'; ctx.fillRect(box.x, box.y, box.w, box.h); ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.setLineDash([6, 4]); ctx.strokeRect(box.x, box.y, box.w, box.h); ctx.setLineDash([]);
+            ctx.fillStyle = 'rgba(0,0,0,.45)'; ctx.font = `400 ${Math.max(12, Math.min(box.h / 8, 28))}px ${FONT_STACK}`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            const uri = gd?.getAttribute('uri') || ''; ctx.fillText(/chart/.test(uri) ? '（圖表無法轉換）' : /diagram/.test(uri) ? '（SmartArt 無法轉換）' : '（物件無法轉換）', box.x + box.w / 2, box.y + box.h / 2); ctx.textAlign = 'left'; }
+        } else {
+          const spPr = chain.map(s => kid(s, 'spPr')).find(s => s && (kid(s, 'solidFill') || kid(s, 'gradFill') || kid(s, 'blipFill') || kid(s, 'noFill'))) || kid(el, 'spPr');
+          const styleEl = kid(el, 'style');
+          const path = geomPath(ctx, el, box.x, box.y, box.w, box.h);
+          if (!isLine(el)) paintFill(ctx, await fillOf(C, spPr, styleEl, rels), box.x, box.y, box.w, box.h, path);
+          // outline
+          const lnEl = chain.map(s => pth(s, 'spPr', 'ln')).find(Boolean);
+          let lc = null, lw = 0;
+          if (lnEl && kid(lnEl, 'noFill')) lc = null;
+          else if (lnEl && kid(lnEl, 'solidFill')) { lc = color(C, kid(lnEl, 'solidFill')); lw = num(lnEl.getAttribute('w'), 12700); }
+          else { const lr = kid(styleEl, 'lnRef'); if (lr && num(lr.getAttribute('idx')) > 0) { lc = color(C, lr); lw = num(lnEl?.getAttribute('w'), 12700); } }
+          if (lc && lw) { path(); ctx.strokeStyle = lc; ctx.lineWidth = Math.max(1, lw * k); const d = pth(lnEl, 'prstDash')?.getAttribute('val'); if (d && d !== 'solid') ctx.setLineDash([lw * k * 4, lw * k * 3]); ctx.stroke(); ctx.setLineDash([]); }
+          // text (unrotate text for flips)
+          if (kid(el, 'txBody')) {
+            const fr = kid(styleEl, 'fontRef');
+            await drawText(C, ctx, el, chain, box, k, { defColor: fr ? color(C, fr) : null });
+          }
+        }
+        ctx.restore();
+      } catch (e) { console.warn('ppt shape skipped', e); try { ctx.restore(); } catch {} }
+    }
+  }
+  async function drawTable(C, ctx, tbl, box, k){
+    const cols = kids(kid(tbl, 'tblGrid'), 'gridCol').map(c => num(c.getAttribute('w')) * k);
+    let y = box.y;
+    const rows = kids(tbl, 'tr'), fallbackH = box.h > 4 ? box.h / Math.max(1, rows.length) : 370840 * k;
+    const rowH = rows.map(r => Math.max(num(r.getAttribute('h')) * k, num(r.getAttribute('h')) ? 0 : fallbackH));
+    const cellSp = tc => { const fake = tc.ownerDocument.createElementNS('http://schemas.openxmlformats.org/presentationml/2006/main', 'p:sp'); const body = kid(tc, 'txBody'); if (body) fake.appendChild(body.cloneNode(true)); return fake; };
+    rows.forEach((tr, ri) => { let ci = 0; kids(tr, 'tc').forEach(tc => { const span = num(tc.getAttribute('gridSpan'), 1); const w = cols.slice(ci, ci + span).reduce((a, b) => a + b, 0); if (num(tc.getAttribute('rowSpan'), 1) === 1 && !tc.getAttribute('vMerge')) { const sp = cellSp(tc); const need = drawText(C, ctx, sp, [sp], { x: 0, y: 0, w, h: 1e6 }, k, { tableCell: true, defSz: 1800, measure: true }); if (need > rowH[ri]) rowH[ri] = need; } ci += span; }); });
+    const total = rowH.reduce((a, b) => a + b, 0);
+    rows.forEach((tr, ri) => {
+      let x = box.x; const cells = kids(tr, 'tc'); let ci = 0;
+      cells.forEach(tc => {
+        const span = num(tc.getAttribute('gridSpan'), 1), rs = num(tc.getAttribute('rowSpan'), 1);
+        const w = cols.slice(ci, ci + span).reduce((a, b) => a + b, 0), h = rowH.slice(ri, ri + rs).reduce((a, b) => a + b, 0);
+        if (!tc.getAttribute('hMerge') && !tc.getAttribute('vMerge')) {
+          const tcPr = kid(tc, 'tcPr'), sf = tcPr && kid(tcPr, 'solidFill');
+          ctx.fillStyle = sf ? color(C, sf) : (ri === 0 ? 'rgba(68,114,196,1)' : (ri % 2 ? 'rgba(207,213,234,1)' : 'rgba(233,235,245,1)'));
+          ctx.fillRect(x, y, w, h); ctx.strokeStyle = '#ffffff'; ctx.lineWidth = Math.max(1, k * 12700); ctx.strokeRect(x, y, w, h);
+          const fake = cellSp(tc); drawText(C, ctx, fake, [fake], { x, y, w, h }, k, { tableCell: true, defSz: 1800, defColor: ri === 0 && !sf ? '#ffffff' : '#000000', clip: true });
+        }
+        x += w; ci += span;
+      });
+      y += rowH[ri];
+    });
+    if (total < 1) return;
+  }
+  async function background(C, ctx, W, H, k){
+    for (const [d, rels] of [[C.sld, C.srels], [C.layout, C.lrels], [C.master, C.mrels]]) {
+      const bg = pth(d, 'cSld', 'bg'); if (!bg) continue;
+      const bgPr = kid(bg, 'bgPr'), bgRef = kid(bg, 'bgRef');
+      let f = null;
+      if (bgPr) f = await fillOf(C, bgPr, null, rels);
+      else if (bgRef) { const c = color(C, bgRef); if (c) f = { type: 'color', c }; }
+      if (f && f.type !== 'none') { paintFill(ctx, f, 0, 0, W, H, () => { ctx.beginPath(); ctx.rect(0, 0, W, H); }); return; }
+    }
+  }
+  async function render(P, i, widthPx){
+    const C = await context(P, P.slidePaths[i]);
+    if (C.sld?.getAttribute('show') === '0') C.hidden = true;
+    const W = widthPx, k = W / P.cx, H = Math.round(P.cy * k);
+    const c = document.createElement('canvas'); c.width = W; c.height = H;
+    const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+    await background(C, ctx, W, H, k);
+    const showM = sp => sp?.getAttribute('showMasterSp') !== '0';
+    if (showM(C.layout) && showM(C.sld)) await drawTree(C, ctx, pth(C.master, 'cSld', 'spTree'), k, 'master', C.mrels);
+    if (showM(C.sld)) await drawTree(C, ctx, pth(C.layout, 'cSld', 'spTree'), k, 'layout', C.lrels);
+    await drawTree(C, ctx, pth(C.sld, 'cSld', 'spTree'), k, 'slide', C.srels);
+    return { canvas: c, hidden: !!C.hidden };
+  }
+  return { open, render, EMU_PT };
+})();
+
+/* ================= Office / HTML → PDF ================= */
+Object.assign(LIBS, {
+  h2c: 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+  mammoth: 'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js',
+  xlsx: 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js'
+});
+const PAGE_PT = { a4: [595.28, 841.89], letter: [612, 792] };
+function pageGeom(size, land, marginMm){
+  let [w, h] = PAGE_PT[size] || PAGE_PT.a4; if (land) [w, h] = [h, w];
+  const m = marginMm * 72 / 25.4; return { w, h, m, cw: w - 2 * m, ch: h - 2 * m, size, land, marginMm };
+}
+const SYS_FONT = '"Microsoft JhengHei","PingFang TC","Noto Sans CJK TC","Noto Sans TC","Heiti TC","Segoe UI",Arial,sans-serif';
+function injectHead(html, extra){
+  if (/<\/head>/i.test(html)) return html.replace(/<\/head>/i, extra + '</head>');
+  if (/<html[^>]*>/i.test(html)) return html.replace(/<html[^>]*>/i, m => m + '<head>' + extra + '</head>');
+  return '<!DOCTYPE html><html><head><meta charset="utf-8">' + extra + '</head><body>' + html + '</body></html>';
+}
+async function makeFrame(html, widthPx){
+  const f = document.createElement('iframe');
+  f.setAttribute('aria-hidden', 'true'); f.tabIndex = -1; f.setAttribute('sandbox', 'allow-same-origin allow-modals');
+  f.style.cssText = `position:fixed;left:-40000px;top:0;width:${widthPx}px;height:1200px;border:0;background:#fff`;
+  document.body.appendChild(f);
+  try {
+    await new Promise((res, rej) => { const t = setTimeout(() => rej(userErr('無法建立轉換區域。如果是在 Claude 裡開啟，請改到 GitHub 上的網站使用這個功能。')), 10000); f.onload = () => { clearTimeout(t); res(); }; f.srcdoc = html; });
+    const d = f.contentDocument; if (!d || !d.body) throw userErr('無法讀取轉換內容');
+    try { await Promise.race([d.fonts.ready, new Promise(r => setTimeout(r, 4000))]); } catch {}
+    await Promise.all([...d.images].map(im => im.complete ? 0 : new Promise(r => { im.onload = im.onerror = r; setTimeout(r, 10000); })));
+    return f;
+  } catch (e) { f.remove(); throw e; }
+}
+// Render an iframe's document into PDF pages, breaking between lines / rows where possible.
+async function frameToPdf(f, geo, out, { onPage, breakSel, previews } = {}){
+  await loadScript(LIBS.h2c);
+  const d = f.contentDocument, body = d.body, W = parseFloat(f.style.width);
+  const s = (geo.cw * 4 / 3) / W, pageH = (geo.ch * 4 / 3) / s;
+  const total = Math.max(1, Math.ceil(Math.max(d.documentElement.scrollHeight, body.scrollHeight)));
+  f.style.height = Math.min(total, 30000) + 'px';
+  const iv = [], range = d.createRange(), tw = d.createTreeWalker(body, NodeFilter.SHOW_TEXT); let n;
+  while ((n = tw.nextNode())) { if (!n.textContent.trim()) continue; range.selectNodeContents(n); for (const r of range.getClientRects()) if (r.height > 0) iv.push([r.top, r.bottom]); }
+  for (const el of body.querySelectorAll('img,svg,canvas,video,tr,hr,figure,li')) { const r = el.getBoundingClientRect(); if (r.height > 0 && r.height < pageH * 0.6) iv.push([r.top, r.bottom]); }
+  const win = f.contentWindow;
+  for (const el of body.querySelectorAll('div,section,article,aside,blockquote,pre,fieldset,details,header,footer,p,h1,h2,h3,h4,h5,h6')) {
+    const r = el.getBoundingClientRect(); if (!(r.height > 0 && r.height < pageH * 0.4)) continue;
+    const cs = win.getComputedStyle(el), boxed = parseFloat(cs.borderTopWidth) > 0 || parseFloat(cs.borderBottomWidth) > 0 || (cs.backgroundColor && !/rgba?\(0, 0, 0, 0\)|transparent/.test(cs.backgroundColor)) || cs.boxShadow !== 'none';
+    if (boxed || /^(H\d|PRE)$/.test(el.tagName)) iv.push([r.top, r.bottom]);
+  }
+  iv.sort((a, b) => a[0] - b[0]);
+  const merged = []; for (const [a, b] of iv) { const L = merged[merged.length - 1]; if (L && a < L[1] - 0.5) L[1] = Math.max(L[1], b); else merged.push([a, b]); }
+  const forced = breakSel ? [...body.querySelectorAll(breakSel)].map(el => el.getBoundingClientRect().top).filter(y => y > 2).sort((a, b) => a - b) : [];
+  const breaks = [0]; let start = 0, guard = 0;
+  while (start < total - 1 && guard++ < 5000) {
+    const limit = start + pageH, fb = forced.find(y => y > start + 4 && y <= limit);
+    if (fb) { breaks.push(fb); start = fb; continue; }
+    if (limit >= total) { breaks.push(total); break; }
+    let lo = 0, hi = merged.length - 1, m = null;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (merged[mid][0] < limit) { if (merged[mid][1] > limit) { m = merged[mid]; break; } lo = mid + 1; } else hi = mid - 1; }
+    const end = m && m[0] - 1 > start + pageH * 0.25 ? m[0] - 1 : limit;
+    breaks.push(end); start = end;
+  }
+  const RS = 2, opts = { scale: RS, backgroundColor: '#ffffff', useCORS: true, logging: false, windowWidth: W, windowHeight: total, scrollX: 0, scrollY: 0 };
+  const full = total * RS <= 30000 && W * RS <= 16000 ? await html2canvas(body, { ...opts, x: 0, y: 0, width: W, height: total }) : null;
+  const pages = breaks.length - 1;
+  for (let i = 0; i < pages; i++) {
+    onPage && onPage(i + 1, pages);
+    const a = breaks[i], b = breaks[i + 1], hpx = Math.max(1, b - a);
+    let c;
+    if (full) { c = document.createElement('canvas'); c.width = Math.ceil(W * RS); c.height = Math.ceil(hpx * RS); const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height); cx.drawImage(full, 0, Math.floor(a * RS), c.width, c.height, 0, 0, c.width, c.height); }
+    else c = await html2canvas(body, { ...opts, x: 0, y: a, width: W, height: hpx });
+    const img = await out.embedJpg(await canvasBytes(c, 'image/jpeg', .92));
+    const pw = W * s * 0.75, ph = hpx * s * 0.75, page = out.addPage([geo.w, geo.h]);
+    page.drawImage(img, { x: geo.m, y: geo.h - geo.m - ph, width: pw, height: ph });
+    if (previews) previews.push(thumbOf(c, geo, s, hpx));
+    c.width = c.height = 0;
+  }
+  if (full) full.width = full.height = 0;
+  return pages;
+}
+function thumbOf(c, geo, s, hpx){
+  const t = document.createElement('canvas'), tw = 180, k = tw / geo.w; t.width = tw; t.height = Math.round(geo.h * k);
+  const x = t.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, t.width, t.height);
+  x.drawImage(c, geo.m * k, geo.m * k, c.width / 2 * s * 0.75 * k, hpx * s * 0.75 * k); return t.toDataURL('image/jpeg', .7);
+}
+function showPreviews(id, list){
+  const el = $(`#pv-${id}`); if (!el) return;
+  el.innerHTML = list.slice(0, 60).map((u, i) => `<figure><img alt="第 ${i + 1} 頁" src="${u}"><figcaption>${i + 1}</figcaption></figure>`).join('') + (list.length > 60 ? `<p class="hint">…共 ${list.length} 頁</p>` : '');
+  el.hidden = !list.length;
+}
+async function printFrame(html, geo){
+  const css = `<style>@page{size:${geo.size === 'letter' ? 'letter' : 'A4'} ${geo.land ? 'landscape' : 'portrait'};margin:${geo.marginMm}mm}html,body{margin:0!important}</style>`;
+  const f = await makeFrame(injectHead(html, css), Math.round(geo.cw * 4 / 3));
+  try { f.contentWindow.focus(); f.contentWindow.print(); }
+  catch { f.remove(); throw userErr('瀏覽器不允許從這裡列印，請改到 GitHub 上的網站使用這個功能。'); }
+  setTimeout(() => f.remove(), 120000);
+}
+const geoFrom = id => pageGeom($(`#${id}-size`).value, $(`#${id}-orient`).value === 'land', +$(`#${id}-margin`).value);
+const BASE_CSS = `html,body{margin:0;padding:0;background:#fff}body{font-family:${SYS_FONT};color:#111;font-size:14.6px;line-height:1.6;overflow-wrap:anywhere}img{max-width:100%;height:auto}table{border-collapse:collapse;max-width:100%}`;
+
+/* ---------- generic non-PDF single file ---------- */
+async function openDocFile(id, file){
+  const line = $(`[data-file="${id}"]`), drop = $(`[data-drop="${id}"]`);
+  try {
+    if (S[id] && S[id].doc) S[id].doc.destroy();
+    S[id] = { file, buf: await file.arrayBuffer(), doc: null, n: 0 };
+    line.hidden = false; line.innerHTML = `<span class="fn">${esc(file.name)}</span><span class="meta">${fmtSize(file.size)}</span><button class="btn" type="button">換一個檔案</button>`;
+    line.querySelector('button').addEventListener('click', () => { closeSingle(id); showPreviews(id, []); });
+    drop.hidden = true;
+    ON_LOAD[id] && await ON_LOAD[id]();
+  } catch (e) { console.error(e); delete S[id]; line.hidden = true; drop.hidden = false; toast(errMsg(e), 6000); }
+  refresh();
+}
+async function convertHtmlToPdf(id, btn, html, geo, opts = {}){
+  progressLabel(btn, '排版中…');
+  let W = Math.round(geo.cw * 4 / 3);
+  if (opts.renderWidth && opts.renderWidth > W) W = opts.renderWidth;
+  const f = await makeFrame(html, W);
+  try {
+    if (opts.fitWidth) {
+      const sw = Math.max(f.contentDocument.documentElement.scrollWidth, f.contentDocument.body.scrollWidth);
+      if (sw > W + 2) { f.style.width = sw + 'px'; await new Promise(r => setTimeout(r, 50)); }
+    }
+    const out = await P.PDFDocument.create(), previews = [];
+    const n = await frameToPdf(f, geo, out, { breakSel: opts.breakSel, previews, onPage: (i, t) => progressLabel(btn, `產生第 ${i} / ${t} 頁…`) });
+    showPreviews(id, previews);
+    return { bytes: await out.save(), pages: n };
+  } finally { f.remove(); }
+}
+
+/* ---------- Word → PDF ---------- */
+const WORD_CSS = `<style>${BASE_CSS}h1{font-size:26px;margin:.6em 0 .4em}h2{font-size:21px;margin:.8em 0 .35em}h3{font-size:17px;margin:.8em 0 .3em}h4,h5,h6{font-size:15px;margin:.7em 0 .3em}p{margin:0 0 .55em}ul,ol{margin:0 0 .6em;padding-left:1.8em}li{margin:.15em 0}td,th{border:1px solid #9a9a9a;padding:4px 7px;vertical-align:top}th{background:#f2f2f2}table{margin:.4em 0 .8em;width:100%}blockquote{margin:.5em 0 .5em 1em;padding-left:1em;border-left:3px solid #ccc;color:#444}a{color:#1a56c4}</style>`;
+async function wordHtml(id){
+  const st = S[id];
+  if (/\.doc$/i.test(st.file.name)) throw userErr('舊版的 .doc 格式無法轉換，請先用 Word 開啟後「另存新檔」成 .docx 再試一次。');
+  await loadScript(LIBS.mammoth);
+  const r = await mammoth.convertToHtml({ arrayBuffer: st.buf.slice(0) });
+  if (!r.value.trim()) throw userErr('這份 Word 文件裡沒有可轉換的內容。');
+  return injectHead(r.value, '<meta charset="utf-8">' + WORD_CSS);
+}
+go('word2pdf', '轉換中…', async btn => {
+  progressLabel(btn, '讀取 Word 檔…');
+  const geo = geoFrom('w2p'), html = await wordHtml('word2pdf');
+  const r = await convertHtmlToPdf('word2pdf', btn, html, geo);
+  await savePdf(r.bytes, baseName(S.word2pdf.file.name) + '.pdf');
+});
+$('#w2p-print').addEventListener('click', async e => { const b = e.currentTarget; try { b.disabled = true; await printFrame(await wordHtml('word2pdf'), geoFrom('w2p')); } catch (err) { toast(errMsg(err), 6000); } finally { b.disabled = false; } });
+
+/* ---------- Excel → PDF ---------- */
+const XL = { wb: null, sheets: [] };
+async function decodeTextBuf(buf){
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+  catch { try { return new TextDecoder('big5').decode(buf); } catch { return new TextDecoder('utf-8').decode(buf); } }
+}
+ON_LOAD.xls2pdf = async () => {
+  const st = S.xls2pdf; await loadScript(LIBS.xlsx);
+  if (/\.csv$/i.test(st.file.name)) XL.wb = XLSX.read((await decodeTextBuf(st.buf)).replace(/^\uFEFF/, ''), { type: 'string' });
+  else XL.wb = XLSX.read(new Uint8Array(st.buf), { type: 'array', cellDates: true });
+  XL.sheets = XL.wb.SheetNames.map(name => { const ws = XL.wb.Sheets[name]; const ref = ws['!ref']; return { name, empty: !ref || XLSX.utils.decode_range(ref).e.r < 0 || Object.keys(ws).filter(k => k[0] !== '!').length === 0, on: true }; });
+  XL.sheets.forEach(s => { if (s.empty) s.on = false; });
+  const box = $('#x2p-sheets');
+  box.innerHTML = XL.sheets.map((s, i) => `<label class="f check"><input type="checkbox" data-si="${i}" ${s.on ? 'checked' : ''} ${s.empty ? 'disabled' : ''}> ${esc(s.name)}${s.empty ? '（空白）' : ''}</label>`).join('');
+  $$('[data-si]', box).forEach(c => c.addEventListener('change', () => { XL.sheets[+c.dataset.si].on = c.checked; refresh(); }));
+  $('#x2p-sheets-f').hidden = XL.sheets.length < 2;
+};
+ON_CLOSE.xls2pdf = () => { XL.wb = null; XL.sheets = []; };
+go('xls2pdf', '轉換中…', async btn => {
+  const chosen = XL.sheets.filter(s => s.on); if (!chosen.length) throw userErr('請至少選一個工作表');
+  const grid = $('#x2p-grid').checked, fit = $('#x2p-fit').checked, orient = $('#x2p-orient').value;
+  const sections = chosen.map(s => {
+    let t = XLSX.utils.sheet_to_html(XL.wb.Sheets[s.name], { header: '', footer: '', editable: false });
+    t = t.replace(/<table[^>]*>/i, '<table>');
+    return `<section class="sheet">${chosen.length > 1 || XL.wb.SheetNames.length > 1 ? `<h2>${esc(s.name)}</h2>` : ''}${t}</section>`;
+  }).join('');
+  const css = `<style>${BASE_CSS}body{font-size:12px;line-height:1.35}h2{font-size:15px;margin:0 0 8px}table{border-collapse:collapse}td,th{padding:3px 7px;vertical-align:top;${grid ? 'border:1px solid #b4b4b4;' : 'border:0;'}${fit ? 'white-space:nowrap;' : ''}}tr:first-child td{font-weight:700;background:#f3f4f6}</style>`;
+  const html = injectHead(sections, '<meta charset="utf-8">' + css);
+  let geo = pageGeom($('#x2p-size').value, orient === 'land', +$('#x2p-margin').value);
+  if (orient === 'auto') {
+    progressLabel(btn, '計算版面…');
+    const f = await makeFrame(html, Math.round(geo.cw * 4 / 3));
+    const sw = f.contentDocument.documentElement.scrollWidth; f.remove();
+    if (sw > geo.cw * 4 / 3 * 1.02) geo = pageGeom($('#x2p-size').value, true, +$('#x2p-margin').value);
+  }
+  const r = await convertHtmlToPdf('xls2pdf', btn, html, geo, { fitWidth: fit, breakSel: '.sheet + .sheet' });
+  await savePdf(r.bytes, baseName(S.xls2pdf.file.name) + '.pdf');
+});
+
+/* ---------- HTML → PDF ---------- */
+function syncHtmlMode(){
+  const paste = $('input[name=h2p-src]:checked').value === 'paste';
+  $('#h2p-file-area').hidden = paste; $('#h2p-paste-area').hidden = !paste; refresh();
+}
+$$('input[name=h2p-src]').forEach(r => r.addEventListener('change', syncHtmlMode));
+$('#h2p-code').addEventListener('input', () => refresh());
+async function htmlSource(){
+  if ($('input[name=h2p-src]:checked').value === 'paste') { const t = $('#h2p-code').value.trim(); if (!t) throw userErr('請先貼上 HTML 程式碼'); return { html: t, name: '網頁-' + stamp() }; }
+  const st = S.html2pdf; if (!st) throw userErr('請先選擇 HTML 檔案');
+  return { html: await decodeTextBuf(st.buf), name: baseName(st.file.name) };
+}
+const htmlPrep = (html, extra = '') => injectHead(html, `<meta charset="utf-8"><style>html,body{margin:0!important}${extra}</style>`);
+go('html2pdf', '轉換中…', async btn => {
+  const { html, name } = await htmlSource(), geo = geoFrom('h2p'), rw = +$('#h2p-width').value;
+  const r = await convertHtmlToPdf('html2pdf', btn, htmlPrep(html, 'body{background:#fff}'), geo, { renderWidth: rw || 0 });
+  await savePdf(r.bytes, name + '.pdf');
+});
+$('#h2p-print').addEventListener('click', async e => { const b = e.currentTarget; try { b.disabled = true; const { html } = await htmlSource(); await printFrame(htmlPrep(html), geoFrom('h2p')); } catch (err) { toast(errMsg(err), 6000); } finally { b.disabled = false; } });
+
+/* ---------- PowerPoint → PDF ---------- */
+go('ppt2pdf', '轉換中…', async btn => {
+  const st = S.ppt2pdf;
+  if (/\.ppt$/i.test(st.file.name)) throw userErr('舊版的 .ppt 格式無法轉換，請先用 PowerPoint 開啟後「另存新檔」成 .pptx 再試一次。');
+  progressLabel(btn, '讀取簡報…');
+  let Pz; try { Pz = await PPT.open(st.buf.slice(0)); } catch (e) { console.error(e); throw userErr('無法讀取這個簡報檔，檔案可能已損壞或不是 .pptx 格式。'); }
+  if (!Pz.count) throw userErr('這份簡報裡沒有投影片。');
+  const W = +$('#p2p-q').value, skipHidden = !$('#p2p-hidden').checked;
+  const out = await P.PDFDocument.create(), pw = Pz.cx / PPT.EMU_PT, ph = Pz.cy / PPT.EMU_PT, previews = []; let hiddenSkipped = 0;
+  for (let i = 0; i < Pz.count; i++) {
+    progressLabel(btn, `轉換第 ${i + 1} / ${Pz.count} 張…`);
+    const { canvas, hidden } = await PPT.render(Pz, i, W);
+    if (hidden && skipHidden) { hiddenSkipped++; continue; }
+    const img = await out.embedJpg(await canvasBytes(canvas, 'image/jpeg', .9));
+    out.addPage([pw, ph]).drawImage(img, { x: 0, y: 0, width: pw, height: ph });
+    const t = document.createElement('canvas'); t.width = 240; t.height = Math.round(240 * canvas.height / canvas.width); t.getContext('2d').drawImage(canvas, 0, 0, t.width, t.height); previews.push(t.toDataURL('image/jpeg', .7));
+    canvas.width = canvas.height = 0;
+  }
+  showPreviews('ppt2pdf', previews);
+  if (!out.getPageCount()) throw userErr('所有投影片都是隱藏的。請勾選「包含隱藏的投影片」。');
+  await savePdf(await out.save(), baseName(st.file.name) + '.pdf');
+  if (hiddenSkipped) toast(`已略過 ${hiddenSkipped} 張隱藏的投影片`, 4000);
 });
 
 /* ================= AI ================= */
